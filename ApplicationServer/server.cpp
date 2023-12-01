@@ -6,4 +6,6 @@ int main()
 	std::cout << "Hello from server" << std::endl;
 	
 	WSAData wsaData;
-}
+
+	return 0;
+} 

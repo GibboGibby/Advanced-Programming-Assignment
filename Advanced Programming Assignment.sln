@@ -11,6 +11,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zApplicationCore", "ApplicationCore\ApplicationCore.vcxproj", "{6FD9F08A-92DB-4CEF-A273-0571A5547BCD}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ApplicationClient", "ApplicationClient\ApplicationClient.vcxproj", "{8A303EAA-83D4-4A25-86EA-B52CAB5DD45E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6FD9F08A-92DB-4CEF-A273-0571A5547BCD} = {6FD9F08A-92DB-4CEF-A273-0571A5547BCD}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
