@@ -26,7 +26,7 @@ int main()
 
 	server.sin_family = AF_INET;
 	server.sin_port = htons(PORT);
-	server.sin_addr.s_addr = inet_addr("127.0.0.1");
+	server.sin_addr.s_addr = inet_addr("82.29.37.160");
 
 	while (true)
 	{
@@ -34,7 +34,7 @@ int main()
 		memset(message, 0, sizeof(GibCore::SentStruct));
 
 
-		cv::Mat img = cv::imread("C:/Users/james/Pictures/Screenshots/bad-yuumi.jpg");
+		cv::Mat img = cv::imread("./bad-yuumi.jpg");
 		std::vector<uchar> buf;
 		//buf.resize(200 * 1024 * 1024);
 		cv::imencode(".jpg", img, buf);
