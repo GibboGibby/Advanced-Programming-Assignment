@@ -3,6 +3,11 @@
 #include "..\ApplicationServer\core.h"
 #include <iostream>
 
+#include <chrono>
+#include <thread>
+
+
+
 
 
 
@@ -51,7 +56,20 @@ int main()
 
 		const char* dataInBytes = reinterpret_cast<char*>(&structToSend);
 
-		std::cout << buf.size();
+		std::cout << buf.size() << std::endl;
+
+		GibCore::Image imgStruct;
+		imgStruct.imgData = (char*) & buf[0];
+		imgStruct.imgSize = buf.size();
+
+		std::cout << buf.size() << " - Regular" << std::endl;
+		size_t val = buf.size();
+		char sizeButChar[sizeof(size_t)];
+		memcpy(sizeButChar, &val, sizeof(size_t));
+		int bufSize = sizeof(size_t);
+		sendto(clientSocket, sizeButChar, bufSize, 0, (sockaddr*)&server, sizeof(sockaddr_in));
+
+		//std::this_thread::sleep_for(std::chrono::seconds(2));
 
 		if (sendto(clientSocket, (const char*)&buf[0], buf.size(), 0, (sockaddr*)&server, sizeof(sockaddr_in)) == SOCKET_ERROR)
 		{

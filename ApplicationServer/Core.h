@@ -41,6 +41,12 @@ namespace GibCore
 		InsideClass theClass;
 	};
 
+	struct Image
+	{
+		size_t imgSize;
+		char* imgData;
+	};
+
 
 
 }

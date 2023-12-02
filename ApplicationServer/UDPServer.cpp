@@ -24,23 +24,36 @@ bool UDPServer::Init()
 
 	while (true)
 	{
-		printf("Waiting for data");
+		printf("Waiting for data\n");
 
 		fflush(stdout);
 
 		GibCore::SentStruct receivedInfo;
 
 		//char buffer[sizeof(GibCore::SentStruct)];
-		char buffer[60547];
 
 
 		int len;
 		int slen = sizeof(sockaddr_in);
+		
+		char sizeBuf[sizeof(size_t)];
+		
+		recvfrom(serverSocket, sizeBuf, sizeof(size_t), 0, (sockaddr*)&client, &slen);
+		size_t actualSize;
+		memcpy(&actualSize, sizeBuf, sizeof(size_t));
+		char* buffer = new char[actualSize];
+
+		std::cout << actualSize << " - Is the size transmitted across the wire" << std::endl;
+
+		
+
 		//if (len = recvfrom(serverSocket, buffer, sizeof(GibCore::SentStruct), 0, (sockaddr*)&client, &slen) == SOCKET_ERROR)
-		if (len = recvfrom(serverSocket, buffer, 60547, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR)
+		if (len = recvfrom(serverSocket, buffer, actualSize, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR)
 		{
-			printf("RecvFrom Failed!\n");
+			printf("RecvFrom Failed!\nThis reason: %s\n", WSAGetLastError());
 		}
+
+		std::cout << "Makes it here, thus receiving all of the data\n";
 
 		//memcpy(&receivedInfo, buffer, sizeof(receivedInfo));
 		/*
@@ -60,7 +73,7 @@ bool UDPServer::Init()
 		cv::namedWindow("ServerDisplay", cv::WINDOW_AUTOSIZE);
 		cv::Mat image;
 		std::vector<uchar> vec;
-		vec.assign(buffer, buffer + 60547);
+		vec.assign(buffer, buffer + actualSize);
 
 		image = cv::imdecode(cv::Mat(vec), 1);
 		//image = cv::imdecode(cv::Mat(1, receivedInfo.imgSize * sizeof(uchar), CV_8UC1, receivedInfo.imgAsUChar), cv::IMREAD_UNCHANGED);
