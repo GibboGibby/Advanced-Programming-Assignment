@@ -30,22 +30,23 @@ bool UDPServer::Init()
 
 		GibCore::SentStruct receivedInfo;
 
-		char buffer[sizeof(GibCore::SentStruct)];
+		//char buffer[sizeof(GibCore::SentStruct)];
+		char buffer[60547];
 
 
 		int len;
 		int slen = sizeof(sockaddr_in);
-		if (len = recvfrom(serverSocket, buffer, sizeof(GibCore::SentStruct), 0, (sockaddr*)&client, &slen) == SOCKET_ERROR)
+		//if (len = recvfrom(serverSocket, buffer, sizeof(GibCore::SentStruct), 0, (sockaddr*)&client, &slen) == SOCKET_ERROR)
+		if (len = recvfrom(serverSocket, buffer, 60547, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR)
 		{
 			printf("RecvFrom Failed!\n");
 		}
 
-		memcpy(&receivedInfo, buffer, sizeof(receivedInfo));
+		//memcpy(&receivedInfo, buffer, sizeof(receivedInfo));
 		/*
 		// Attempting struct stuff
 		//memcpy(buffer, &receivedInfo, sizeof(receivedInfo));
 		memcpy(&receivedInfo, &buffer, sizeof(buffer));
-		*/
 		std::cout << "Received data packet of the struct with these values: " << std::endl;
 
 		std::cout << "Name: " << receivedInfo.name << std::endl;
@@ -54,6 +55,19 @@ bool UDPServer::Init()
 		std::cout << "Vec y: " << receivedInfo.vec.y << std::endl;
 
 		std::cout << "Class value: " << receivedInfo.theClass.GetVal() << std::endl;
+		*/
+
+		cv::namedWindow("ServerDisplay", cv::WINDOW_AUTOSIZE);
+		cv::Mat image;
+		std::vector<uchar> vec;
+		vec.assign(buffer, buffer + 60547);
+
+		image = cv::imdecode(cv::Mat(vec), 1);
+		//image = cv::imdecode(cv::Mat(1, receivedInfo.imgSize * sizeof(uchar), CV_8UC1, receivedInfo.imgAsUChar), cv::IMREAD_UNCHANGED);
+		cv::imshow("ServerDisplay", image);
+		cv::waitKey(0);
+		cv::destroyWindow("ServerDisplay");
+
 	}
 	// https://gist.github.com/sunmeat/02b60c8a3eaef3b8a0fb3c249d8686fd
 	// This is a great resource for learning.
