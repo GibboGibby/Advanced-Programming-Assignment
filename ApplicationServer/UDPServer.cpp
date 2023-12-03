@@ -45,13 +45,23 @@ bool UDPServer::Init()
 
 		std::cout << actualSize << " - Is the size transmitted across the wire" << std::endl;
 
-		
+		size_t remainingToReceieve = actualSize;
 
+		char* bufferPos = &buffer[0];
 		//if (len = recvfrom(serverSocket, buffer, sizeof(GibCore::SentStruct), 0, (sockaddr*)&client, &slen) == SOCKET_ERROR)
-		if (len = recvfrom(serverSocket, buffer, actualSize, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR)
+		while (remainingToReceieve > 0)
 		{
-			printf("RecvFrom Failed!\nThis reason: %s\n", WSAGetLastError());
+			size_t sendSize = remainingToReceieve > UDP_BUF_SIZE ? UDP_BUF_SIZE : remainingToReceieve;
+			while (len = recvfrom(serverSocket, (char*)bufferPos, UDP_BUF_SIZE, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR)
+			{
+				printf("RecvFrom Failed!\nThis reason: %s\n", WSAGetLastError());
+				printf("But this is being retried\n");
+			}
+			remainingToReceieve -= sendSize;
+			bufferPos += sendSize;
+			std::cout << "This is the amount received - " << remainingToReceieve << std::endl;
 		}
+		
 
 		std::cout << "Makes it here, thus receiving all of the data\n";
 
@@ -87,4 +97,10 @@ bool UDPServer::Init()
 	// Need to make the client a class and tidy this one up so not everything is done in the Init method
 	// Struct sends good tho
 	// Now need to test it with an opencv image
+
+	// https://stackoverflow.com/questions/57794550/sending-large-files-over-udp
+	// This is a great resource for learning how to send larger files across UDP
+	// Seems quite simple just requires to split teh packet into a lot of smaller packets
+	// I think recv from should let me receive all the packets all I need is to alter the send on the client side
+	// As this is where the error is coming from
 }

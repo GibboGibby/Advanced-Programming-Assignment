@@ -8,6 +8,8 @@
 #define SERVER "127.0.0.1"
 #define PORT 8888
 
+#define UDP_BUF_SIZE 1357
+
 #include "opencv2/core.hpp"
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/highgui.hpp"

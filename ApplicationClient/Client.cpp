@@ -10,7 +10,6 @@
 
 
 
-
 int main()
 {
 	WSAData wsaData;
@@ -69,12 +68,29 @@ int main()
 		int bufSize = sizeof(size_t);
 		sendto(clientSocket, sizeButChar, bufSize, 0, (sockaddr*)&server, sizeof(sockaddr_in));
 
-		//std::this_thread::sleep_for(std::chrono::seconds(2));
+
+		size_t remainingToSend = buf.size();
+		uchar* from = &buf[0];
+		while (remainingToSend > 0)
+		{
+			size_t sendSize = remainingToSend > UDP_BUF_SIZE ? UDP_BUF_SIZE : remainingToSend;
+			while (sendto(clientSocket, (const char*)from, sendSize, 0, (const struct sockaddr*)&server, sizeof(server)) < 0)
+			{
+				printf("Error during send, retrying...\n");
+			}
+			remainingToSend -= sendSize;
+			from += sendSize;
+			std::cout << remainingToSend << " - What is left to send" << std::endl;
+		}
+		/*
 
 		if (sendto(clientSocket, (const char*)&buf[0], buf.size(), 0, (sockaddr*)&server, sizeof(sockaddr_in)) == SOCKET_ERROR)
 		{
+			std::cout << "Sending error\n" << WSAGetLastError() << std::endl;
 			return 3;
 		}
+		
+		*/
 
 		/*
 		if (sendto(clientSocket, dataInBytes, sizeof(message), 0, (sockaddr*)&server, sizeof(sockaddr_in)) == SOCKET_ERROR)
