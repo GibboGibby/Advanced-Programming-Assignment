@@ -98,6 +98,17 @@ int main()
 			return 3;
 		}
 		*/
+		int slen = sizeof(sockaddr_in);
+		char textBuffer[1024];
+		if (recvfrom(clientSocket, (char*)textBuffer, 1024, 0, (sockaddr*)&server, &slen) == SOCKET_ERROR)
+		{
+			printf("Failed receiving message back");
+		}
+
+		printf("Buffer value: %s\n", textBuffer);
+
+
+
 		break;
 	}
 	closesocket(clientSocket);

@@ -80,6 +80,15 @@ bool UDPServer::Init()
 		std::cout << "Class value: " << receivedInfo.theClass.GetVal() << std::endl;
 		*/
 
+		char message[1024] = { "Recieved ur image good" };
+
+		if (sendto(serverSocket, message, 1024, 0, (sockaddr*)&client, sizeof(sockaddr_in)) == SOCKET_ERROR)
+		{
+			printf("Sendto error\n");
+		}
+
+
+
 		cv::namedWindow("ServerDisplay", cv::WINDOW_AUTOSIZE);
 		cv::Mat image;
 		std::vector<uchar> vec;
