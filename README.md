@@ -6,7 +6,6 @@ The main solution is split into 3 projects
 
 - Server
 - Client
-- Core
 
 Where core is a static link library that includes the winsock (and opencv) header files, as well as information that would need to be shared between the two executable files
 
