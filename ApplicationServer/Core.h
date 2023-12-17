@@ -4,6 +4,8 @@
 #pragma comment(lib, "ws2_32.lib")
 #include <string>
 #include <vector>
+#include <map>
+#include <iostream>
 
 #define SERVER "127.0.0.1"
 #define PORT 8888
@@ -18,37 +20,29 @@
 namespace GibCore
 {
 
-	class InsideClass
+	enum class ImageFilter
 	{
-	private:
-		int val = 52;
-
-	public:
-		void SetVal(int num) { val = num; }
-		int GetVal() { return val; }
-	};
-
-	struct InsideSentStruct
-	{
-		int x, y;
-	};
-
-	struct SentStruct
-	{
-		uchar* imgSizeAsUCharPtr;
-		size_t imgSize;
-		std::string name;
-		int id;
-		InsideSentStruct vec;
-		InsideClass theClass;
-	};
-
-	struct Image
-	{
-		size_t imgSize;
-		char* imgData;
+		RESIZE,
+		ROTATION,
+		CROPPING,
+		FLIPPING,
+		BRIGHTNESSADJUST,
+		CONTRASTADJUST,
+		GAMMACORRECTION,
+		CHANGECOLORSPACE,
+		GAUSSIANBLUR,
+		BOXBLUR,
+		SHARPENING,
+		NOTHING
 	};
 
 
+	struct ImageFilterParams
+	{
+		ImageFilter filter;
+		char params[1024];
+	};
 
+	//extern std::map<ImageFilter, >
+	
 }

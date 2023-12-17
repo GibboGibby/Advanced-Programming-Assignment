@@ -1,117 +1,78 @@
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
-#include "..\ApplicationServer\core.h"
+#include "..\ApplicationServer\Core.h"
 #include <iostream>
 
 #include <chrono>
 #include <thread>
+#include "UDPClient.h"
 
-
-
-
-
-int main()
+void PrintHelp()
 {
-	WSAData wsaData;
-	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+	std::cout << "Help stuff" << std::endl;
+}
+
+
+
+int main(int argc, char* argv[])
+{
+	std::vector<std::string> args = {};
+	for (int i = 1; i < argc; i++)
 	{
+		args.push_back(argv[i]);
+	}
+
+	if (args.size() == 0)
+	{
+		PrintHelp();
+		return 1;
+	}
+	if (args[0] == "help")
+	{
+		PrintHelp();
 		return 1;
 	}
 
-	sockaddr_in server;
-	SOCKET clientSocket;
+	// args contains the input parameters
 
-	if ((clientSocket = socket(AF_INET, SOCK_DGRAM, 0)) == SOCKET_ERROR)
+	// Create client object
+
+	UDPClient client;
+
+	std::string delim = ":";
+	std::string left = args[0].substr(0, args[0].find(delim));
+	std::string right = args[0].substr(args[0].find(delim)+1, args[0].length());
+
+	client.Init(std::stoi(right), left);
+	client.CreateSocket();
+
+	cv::Mat img;
+	std::string extension;
+
+	bool canLoad = client.LoadImageFromPath(args[1], img, extension);
+	if (!canLoad)
 	{
-		return 2;
+		std::cout << "Failed to load image" << std::endl;
+		return 1; 
 	}
 
-	memset((char*)&server, 0, sizeof(server));
+	//cv::imshow("Gaming", img);
+	//cv::waitKey(0);
+	//cv::destroyWindow("Gaming");
 
-	server.sin_family = AF_INET;
-	server.sin_port = htons(PORT);
-	server.sin_addr.s_addr = inet_addr(SERVER);
-
-	while (true)
+	client.SendImage(img, extension);
+	GibCore::ImageFilterParams param;
+	param.filter = client.FilterFromString(args[2]);
+	std::string longStr;
+	for (int i = 3; i < args.size(); i++)
 	{
-		char message[sizeof GibCore::SentStruct];
-		memset(message, 0, sizeof(GibCore::SentStruct));
-
-
-		cv::Mat img = cv::imread("./bad-yuumi.jpg");
-		std::vector<uchar> buf;
-		//buf.resize(200 * 1024 * 1024);
-		cv::imencode(".jpg", img, buf);
-		
-		GibCore::SentStruct structToSend;
-		structToSend.name = "Jame Gib";
-		structToSend.id = 69;
-		structToSend.vec = { 12,19 };
-		structToSend.theClass.SetVal(420);
-		structToSend.imgSize = img.rows * img.cols * img.channels();
-		structToSend.imgSizeAsUCharPtr = img.data;
-
-		memcpy(message, &structToSend, sizeof(structToSend));
-
-		const char* dataInBytes = reinterpret_cast<char*>(&structToSend);
-
-		std::cout << buf.size() << std::endl;
-
-		GibCore::Image imgStruct;
-		imgStruct.imgData = (char*) & buf[0];
-		imgStruct.imgSize = buf.size();
-
-		std::cout << buf.size() << " - Regular" << std::endl;
-		size_t val = buf.size();
-		char sizeButChar[sizeof(size_t)];
-		memcpy(sizeButChar, &val, sizeof(size_t));
-		int bufSize = sizeof(size_t);
-		sendto(clientSocket, sizeButChar, bufSize, 0, (sockaddr*)&server, sizeof(sockaddr_in));
-
-
-		size_t remainingToSend = buf.size();
-		uchar* from = &buf[0];
-		while (remainingToSend > 0)
-		{
-			size_t sendSize = remainingToSend > UDP_BUF_SIZE ? UDP_BUF_SIZE : remainingToSend;
-			while (sendto(clientSocket, (const char*)from, sendSize, 0, (const struct sockaddr*)&server, sizeof(server)) < 0)
-			{
-				printf("Error during send, retrying...\n");
-			}
-			remainingToSend -= sendSize;
-			from += sendSize;
-			std::cout << remainingToSend << " - What is left to send" << std::endl;
-		}
-		/*
-
-		if (sendto(clientSocket, (const char*)&buf[0], buf.size(), 0, (sockaddr*)&server, sizeof(sockaddr_in)) == SOCKET_ERROR)
-		{
-			std::cout << "Sending error\n" << WSAGetLastError() << std::endl;
-			return 3;
-		}
-		
-		*/
-
-		/*
-		if (sendto(clientSocket, dataInBytes, sizeof(message), 0, (sockaddr*)&server, sizeof(sockaddr_in)) == SOCKET_ERROR)
-		{
-			return 3;
-		}
-		*/
-		int slen = sizeof(sockaddr_in);
-		char textBuffer[1024];
-		if (recvfrom(clientSocket, (char*)textBuffer, 1024, 0, (sockaddr*)&server, &slen) == SOCKET_ERROR)
-		{
-			printf("Failed receiving message back");
-		}
-
-		printf("Buffer value: %s\n", textBuffer);
-
-
-
-		break;
+		longStr += args[i] + " ";
 	}
-	closesocket(clientSocket);
-	WSACleanup();
-	return 0;
+
+	strcpy_s(param.params, longStr.c_str());
+	//std::copy(args.begin() + 3, args.end(), param.params);
+	client.SendFilter(param);
+
+
+	client.CloseAndCleanup();
 }
