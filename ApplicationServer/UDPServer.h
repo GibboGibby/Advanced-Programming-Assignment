@@ -6,6 +6,7 @@ class UDPServer
 private:
 	SOCKET serverSocket;
 	sockaddr_in server, client;
+	WSAData wsaData;
 	int slen = sizeof(sockaddr_in);
 public:
 	bool Init();
@@ -13,7 +14,7 @@ public:
 	bool BindServer();
 	void StartReceiving();
 	cv::Mat ReceiveImage();
-	GibCore::ImageFilterParams RecieveFilter();
+	GibCore::ImageFilterParams ReceiveFilter();
 
 	std::string GetEnumFilterName(GibCore::ImageFilter filter);
 

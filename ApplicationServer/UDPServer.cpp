@@ -2,15 +2,16 @@
 
 bool UDPServer::Init()
 {
-	WSAData wsaData;
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 	{
 		return false;
 	}
-
+	memset((char*)&server, 0, sizeof(server));
 	server.sin_family = AF_INET;
 	server.sin_addr.s_addr = INADDR_ANY;
 	server.sin_port = htons(PORT);
+
+	return true;
 }
 
 	// https://gist.github.com/sunmeat/02b60c8a3eaef3b8a0fb3c249d8686fd
@@ -88,7 +89,7 @@ cv::Mat UDPServer::ReceiveImage()
 	return image;
 }
 
-GibCore::ImageFilterParams UDPServer::RecieveFilter()
+GibCore::ImageFilterParams UDPServer::ReceiveFilter()
 {
 	GibCore::ImageFilterParams filterInfo;
 	char imgfilterbuffer[sizeof(GibCore::ImageFilterParams)];
@@ -106,23 +107,23 @@ std::string UDPServer::GetEnumFilterName(GibCore::ImageFilter filter)
 	case GibCore::ImageFilter::ROTATION:
 		return "Rotation";
 	case GibCore::ImageFilter::CROPPING:
-		break;
+		return "Cropping";
 	case GibCore::ImageFilter::FLIPPING:
-		break;
+		return "Flipping";
 	case GibCore::ImageFilter::BRIGHTNESSADJUST:
-		break;
+		return "BrightnessAdjust";
 	case GibCore::ImageFilter::CONTRASTADJUST:
-		break;
+		return "ContrastAdjust";
 	case GibCore::ImageFilter::GAMMACORRECTION:
-		break;
+		return "GammaCorrection";
 	case GibCore::ImageFilter::CHANGECOLORSPACE:
-		break;
+		return "ChangeColorSpace";
 	case GibCore::ImageFilter::GAUSSIANBLUR:
-		break;
+		return "GaussianBlur";
 	case GibCore::ImageFilter::BOXBLUR:
-		break;
+		return "BoxBlur";
 	case GibCore::ImageFilter::SHARPENING:
-		break;
+		return "Sharpening";
 	default:
 		return "Unknown";
 	}

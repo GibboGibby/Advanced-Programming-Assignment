@@ -7,6 +7,7 @@
 #include <thread>
 #include "UDPClient.h"
 
+// Print out help information
 void PrintHelp()
 {
 	std::cout << "Help stuff" << std::endl;
@@ -16,6 +17,7 @@ void PrintHelp()
 
 int main(int argc, char* argv[])
 {
+	// Load args into vector
 	std::vector<std::string> args = {};
 	for (int i = 1; i < argc; i++)
 	{
@@ -36,19 +38,30 @@ int main(int argc, char* argv[])
 	// args contains the input parameters
 
 	// Create client object
-
 	UDPClient client;
 
+	// Split argument into server ip and port
 	std::string delim = ":";
 	std::string left = args[0].substr(0, args[0].find(delim));
-	std::string right = args[0].substr(args[0].find(delim)+1, args[0].length());
+	std::string right = args[0].substr(args[0].find(delim) + 1, args[0].length());
 
-	client.Init(std::stoi(right), left);
-	client.CreateSocket();
+	// Initialize Winsock
+	if (!client.Init(std::stoi(right), left))
+	{
+		WSACleanup();
+		return 1;
+	}
+	// Create socket
+	if (!client.CreateSocket())
+	{
+		WSACleanup();
+		return 1;
+	}
 
+	// Load image from the path from the args into the img object
+	// Extension stores the last 4 elements from the path string
 	cv::Mat img;
 	std::string extension;
-
 	bool canLoad = client.LoadImageFromPath(args[1], img, extension);
 	if (!canLoad)
 	{
@@ -56,21 +69,22 @@ int main(int argc, char* argv[])
 		return 1; 
 	}
 
-	//cv::imshow("Gaming", img);
-	//cv::waitKey(0);
-	//cv::destroyWindow("Gaming");
-
+	// Send image object using udp
 	client.SendImage(img, extension);
+	// Create and send filter object
+	// Contains what filter to use and the parameters
 	GibCore::ImageFilterParams param;
 	param.filter = client.FilterFromString(args[2]);
+	// Converts remaining parameters into a long string
 	std::string longStr;
 	for (int i = 3; i < args.size(); i++)
 	{
 		longStr += args[i] + " ";
 	}
-
+	// Copy string into char[]
 	strcpy_s(param.params, longStr.c_str());
-	//std::copy(args.begin() + 3, args.end(), param.params);
+
+	// Send the filter to the server
 	client.SendFilter(param);
 
 
