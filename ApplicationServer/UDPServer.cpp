@@ -32,7 +32,7 @@ bool UDPServer::CreateSocket()
 	{
 		return false;
 	}
-	return true;
+	return true; 
 }
 
 bool UDPServer::BindServer()
@@ -54,6 +54,71 @@ void UDPServer::StartReceiving()
 	}
 }
 
+void UDPServer::ReceiveImageParallel()
+{
+	sockaddr_in newClient;
+	char sizeBuf[sizeof(size_t)];
+	recvfrom(serverSocket, sizeBuf, sizeof(size_t), 0, (sockaddr*)&newClient, &slen);
+	if (CheckClients(newClient)) return;
+	AddToClients(newClient);
+	size_t actualSize;
+	memcpy(&actualSize, sizeBuf, sizeof(size_t));
+
+	std::cout << "Size just after receive - " << actualSize << std::endl;
+	std::thread thr(&UDPServer::ReceivingAndProcessing, this, newClient, actualSize);
+	threadIDs.push_back(thr.get_id());
+	thr.join();
+}
+
+void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size)
+{
+
+	//std::cout << GetCurrentThreadId() << " - " << client.sin_addr.S_un.S_addr << std::endl;
+	std::cout << "\nCreating new thread\n";
+	SOCKET threadSocket;
+	threadSocket = socket(AF_INET, SOCK_DGRAM, 0);
+	connect(threadSocket, (sockaddr*)&client, sizeof(sockaddr_in));
+	char* buffer = new char[size];
+	std::cout << "Parallel actual size - " << size << std::endl;
+	size_t remainingToReceieve = size;
+	
+	char* bufferPos = &buffer[0];
+	while (remainingToReceieve > 0)
+	{
+		size_t sendSize = remainingToReceieve > UDP_BUF_SIZE ? UDP_BUF_SIZE : remainingToReceieve;
+		while (recvfrom(serverSocket, (char*)bufferPos, UDP_BUF_SIZE, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR)
+		{
+			printf("RecvFrom Failed!\nThis reason: %s\n", WSAGetLastError());
+			printf("But this is being retried\n");
+		}
+		remainingToReceieve -= sendSize;
+		bufferPos += sendSize;
+		std::cout << "This is the amount received - " << remainingToReceieve << std::endl;
+	}
+	cv::Mat image;
+	std::vector<uchar> imgData;
+	imgData.assign(buffer, buffer + size);
+	image = cv::imdecode(cv::Mat(imgData), 1);
+
+	cv::imshow("Thread img", image);
+	cv::waitKey(0);
+	cv::destroyWindow("Thread img");
+
+	mutex.lock();
+	RemoveFromClients(client);
+	for (int i = 0; i < threadIDs.size(); i++)
+	{
+		if (threadIDs[i] == std::this_thread::get_id())
+		{
+			threadIDs.erase(threadIDs.begin() + i);
+			break;
+		}
+	}
+	mutex.unlock();
+}
+//https://stackoverflow.com/questions/54155900/udp-server-and-connected-sockets
+// For connect which should filter the packets. need to test on dans pc
+/*
 cv::Mat UDPServer::ReceiveImage()
 {
 	char sizeBuf[sizeof(size_t)];
@@ -61,9 +126,9 @@ cv::Mat UDPServer::ReceiveImage()
 	recvfrom(serverSocket, sizeBuf, sizeof(size_t), 0, (sockaddr*)&client, &slen);
 	size_t actualSize;
 	memcpy(&actualSize, sizeBuf, sizeof(size_t));
+	std::cout << actualSize << " - Is the size transmitted across the wire" << std::endl;
 	char* buffer = new char[actualSize];
 
-	std::cout << actualSize << " - Is the size transmitted across the wire" << std::endl;
 
 	size_t remainingToReceieve = actualSize;
 
@@ -88,6 +153,43 @@ cv::Mat UDPServer::ReceiveImage()
 	image = cv::imdecode(cv::Mat(vec), 1);
 	return image;
 }
+*/
+
+cv::Mat UDPServer::ReceiveImage()
+{
+	char sizeBuf[sizeof(size_t)];
+
+	recvfrom(serverSocket, sizeBuf, sizeof(size_t), 0, (sockaddr*)&client, &slen);
+	size_t actualSize;
+	memcpy(&actualSize, sizeBuf, sizeof(size_t));
+	char* buffer = new char[actualSize];
+
+	std::cout << actualSize << " - Is the size transmitted across the wire" << std::endl;
+	
+	size_t remainingToReceieve = actualSize;
+
+	char* bufferPos = &buffer[0];
+	//if (len = recvfrom(serverSocket, buffer, sizeof(GibCore::SentStruct), 0, (sockaddr*)&client, &slen) == SOCKET_ERROR)
+	while (remainingToReceieve > 0)
+	{
+		size_t sendSize = remainingToReceieve > UDP_BUF_SIZE ? UDP_BUF_SIZE : remainingToReceieve;
+		while (recvfrom(serverSocket, (char*)bufferPos, UDP_BUF_SIZE, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR)
+		{
+			printf("RecvFrom Failed!\nThis reason: %s\n", WSAGetLastError());
+			printf("But this is being retried\n");
+		}
+		remainingToReceieve -= sendSize;
+		bufferPos += sendSize;
+		std::cout << "This is the amount received - " << remainingToReceieve << std::endl;
+	}
+	cv::Mat image;
+	std::vector<uchar> vec;
+	vec.assign(buffer, buffer + actualSize);
+
+	image = cv::imdecode(cv::Mat(vec), 1);
+	return image;
+}
+
 
 GibCore::ImageFilterParams UDPServer::ReceiveFilter()
 {
@@ -96,6 +198,33 @@ GibCore::ImageFilterParams UDPServer::ReceiveFilter()
 	recvfrom(serverSocket, imgfilterbuffer, sizeof(GibCore::ImageFilterParams), 0, (sockaddr*)&client, &slen);
 	memcpy(&filterInfo, imgfilterbuffer, sizeof(GibCore::ImageFilterParams));
 	return filterInfo;
+}
+
+void UDPServer::AddToClients(sockaddr_in client)
+{
+	clients.push_back(client.sin_addr.S_un.S_addr);
+}
+
+bool UDPServer::CheckClients(sockaddr_in client)
+{
+	for (int i = 0; i < clients.size(); i++)
+	{
+		if (clients[i] == client.sin_addr.S_un.S_addr)
+			return true;
+	}
+	return false;
+}
+
+void UDPServer::RemoveFromClients(sockaddr_in client)
+{
+	for (int i = 0; i < clients.size(); i++)
+	{
+		if (clients[i] == client.sin_addr.S_un.S_addr)
+		{
+			clients.erase(clients.begin() + i);
+			return;
+		}
+	}
 }
 
 std::string UDPServer::GetEnumFilterName(GibCore::ImageFilter filter)

@@ -13,7 +13,10 @@ void PrintHelp()
 	std::cout << "Help stuff" << std::endl;
 }
 
-
+void SendImageToServer(UDPClient cli, cv::Mat img, std::string ext)
+{
+	cli.SendImage(img, ext);
+}
 
 int main(int argc, char* argv[])
 {
@@ -57,7 +60,6 @@ int main(int argc, char* argv[])
 		WSACleanup();
 		return 1;
 	}
-
 	// Load image from the path from the args into the img object
 	// Extension stores the last 4 elements from the path string
 	cv::Mat img;
@@ -70,7 +72,20 @@ int main(int argc, char* argv[])
 	}
 
 	// Send image object using udp
+	std::cout << "Sending image!" << std::endl;
+
 	client.SendImage(img, extension);
+
+	
+	//std::thread si1(&SendImageToServer, std::ref(client), img, extension);
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	//std::thread si2(&SendImageToServer, std::ref(client), img, extension);
+	//si1.join();
+	//si2.join();
+	
+
+
+	std::cout << "Both threads executed" << std::endl;
 	// Create and send filter object
 	// Contains what filter to use and the parameters
 	GibCore::ImageFilterParams param;
@@ -85,7 +100,7 @@ int main(int argc, char* argv[])
 	strcpy_s(param.params, longStr.c_str());
 
 	// Send the filter to the server
-	client.SendFilter(param);
+	//client.SendFilter(param);
 
 
 	client.CloseAndCleanup();

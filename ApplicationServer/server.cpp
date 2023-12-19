@@ -29,12 +29,14 @@ int main()
 		server.CloseAndCleanup();
 		return 1;
 	}
-
+	
 	while (true)
 	{
 		// Recevive and store image
-		cv::Mat image = server.ReceiveImage();
+		//cv::Mat image = server.ReceiveImage();
+		server.ReceiveImageParallel();
 		//Recieve and store filter
+		/*
 		GibCore::ImageFilterParams filterInfo = server.ReceiveFilter();
 
 		//std::cout << "filter info filter - " << server.GetEnumFilterName(filterInfo.filter) << std::endl;
@@ -45,6 +47,7 @@ int main()
 		std::string temp;
 		while (ss >> temp)
 			parameters.push_back(temp);
+		*/
 
 
 
@@ -54,11 +57,13 @@ int main()
 
 		//Filters and stuff
 		
+		/*
 		cv::Mat rotatedImg;
 		cv::rotate(image, rotatedImg, cv::RotateFlags::ROTATE_90_CLOCKWISE);
 		cv::imshow("Rotated img", rotatedImg);
 		cv::waitKey(0);
 		cv::destroyWindow("Rotated img");
+		*/
 	}
 
 	return 0;
