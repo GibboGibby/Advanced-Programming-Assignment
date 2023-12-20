@@ -58,8 +58,9 @@ void UDPServer::ReceiveImageParallel()
 {
 	sockaddr_in newClient;
 	char sizeBuf[sizeof(size_t)];
-	recvfrom(serverSocket, sizeBuf, sizeof(size_t), 0, (sockaddr*)&newClient, &slen);
+	recvfrom(serverSocket, sizeBuf, sizeof(size_t), MSG_PEEK, (sockaddr*)&newClient, &slen);
 	if (CheckClients(newClient)) return;
+	recvfrom(serverSocket, sizeBuf, sizeof(size_t), 0, (sockaddr*)&newClient, &slen);
 	AddToClients(newClient);
 	size_t actualSize;
 	memcpy(&actualSize, sizeBuf, sizeof(size_t));
@@ -67,7 +68,7 @@ void UDPServer::ReceiveImageParallel()
 	std::cout << "Size just after receive - " << actualSize << std::endl;
 	std::thread thr(&UDPServer::ReceivingAndProcessing, this, newClient, actualSize);
 	threadIDs.push_back(thr.get_id());
-	thr.join();
+	thr.detach();
 }
 
 void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size)

@@ -74,14 +74,14 @@ int main(int argc, char* argv[])
 	// Send image object using udp
 	std::cout << "Sending image!" << std::endl;
 
-	client.SendImage(img, extension);
+	//client.SendImage(img, extension);
 
 	
-	//std::thread si1(&SendImageToServer, std::ref(client), img, extension);
-	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-	//std::thread si2(&SendImageToServer, std::ref(client), img, extension);
-	//si1.join();
-	//si2.join();
+	std::thread si1(&SendImageToServer, std::ref(client), img, extension);
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	std::thread si2(&SendImageToServer, std::ref(client), img, extension);
+	si1.join();
+	si2.join();
 	
 
 
