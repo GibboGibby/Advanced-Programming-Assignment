@@ -59,8 +59,13 @@ void UDPServer::ReceiveImageParallel()
 	sockaddr_in newClient;
 	char sizeBuf[sizeof(size_t)];
 	recvfrom(serverSocket, sizeBuf, sizeof(size_t), MSG_PEEK, (sockaddr*)&newClient, &slen);
-	if (CheckClients(newClient)) return;
+	if (CheckClients(newClient)) {
+		//std::cout << "Client already in the system\n";
+		return;
+	}
+	//std::cout << "Sizebuf (before second recv) - " << sizeBuf << std::endl;
 	recvfrom(serverSocket, sizeBuf, sizeof(size_t), 0, (sockaddr*)&newClient, &slen);
+	//std::cout << "Sizebuf (after second recv) - " << sizeBuf << std::endl;
 	AddToClients(newClient);
 	size_t actualSize;
 	memcpy(&actualSize, sizeBuf, sizeof(size_t));
@@ -79,6 +84,10 @@ void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size)
 	SOCKET threadSocket;
 	threadSocket = socket(AF_INET, SOCK_DGRAM, 0);
 	connect(threadSocket, (sockaddr*)&client, sizeof(sockaddr_in));
+	char sizeBuf[sizeof(size_t)];
+	//recvfrom(serverSocket, sizeBuf, sizeof(size_t), 0, (sockaddr*)&client, &slen);
+
+
 	char* buffer = new char[size];
 	std::cout << "Parallel actual size - " << size << std::endl;
 	size_t remainingToReceieve = size;
@@ -87,14 +96,16 @@ void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size)
 	while (remainingToReceieve > 0)
 	{
 		size_t sendSize = remainingToReceieve > UDP_BUF_SIZE ? UDP_BUF_SIZE : remainingToReceieve;
+		
 		while (recvfrom(serverSocket, (char*)bufferPos, UDP_BUF_SIZE, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR)
 		{
-			printf("RecvFrom Failed!\nThis reason: %s\n", WSAGetLastError());
+			printf("RecvFrom Failed!\nThis reason: %i\n", WSAGetLastError());
 			printf("But this is being retried\n");
 		}
 		remainingToReceieve -= sendSize;
 		bufferPos += sendSize;
 		std::cout << "This is the amount received - " << remainingToReceieve << std::endl;
+		
 	}
 	cv::Mat image;
 	std::vector<uchar> imgData;
@@ -176,7 +187,7 @@ cv::Mat UDPServer::ReceiveImage()
 		size_t sendSize = remainingToReceieve > UDP_BUF_SIZE ? UDP_BUF_SIZE : remainingToReceieve;
 		while (recvfrom(serverSocket, (char*)bufferPos, UDP_BUF_SIZE, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR)
 		{
-			printf("RecvFrom Failed!\nThis reason: %s\n", WSAGetLastError());
+			printf("RecvFrom Failed!\nThis reason: %i\n", WSAGetLastError());
 			printf("But this is being retried\n");
 		}
 		remainingToReceieve -= sendSize;
@@ -203,14 +214,14 @@ GibCore::ImageFilterParams UDPServer::ReceiveFilter()
 
 void UDPServer::AddToClients(sockaddr_in client)
 {
-	clients.push_back(client.sin_addr.S_un.S_addr);
+	clients.push_back(client.sin_addr.s_addr);
 }
 
 bool UDPServer::CheckClients(sockaddr_in client)
 {
 	for (int i = 0; i < clients.size(); i++)
 	{
-		if (clients[i] == client.sin_addr.S_un.S_addr)
+		if (clients[i] == client.sin_addr.s_addr)
 			return true;
 	}
 	return false;
