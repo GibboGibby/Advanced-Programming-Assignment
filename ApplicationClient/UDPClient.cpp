@@ -55,6 +55,7 @@ void UDPClient::SendImage(cv::Mat& img, std::string extension)
 	sockaddr_in fromSock;
 	int slen = sizeof(sockaddr_in);
 	std::cout << "recieving\n";
+	//std::this_thread::sleep_for(std::chrono::milliseconds(50));
 	recvfrom(clientSocket, portChar, sizeof(int),0, (sockaddr*)&fromSock, &slen);
 	int port;
 	memcpy(&port, &portChar, sizeof(int));
