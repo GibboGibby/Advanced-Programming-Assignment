@@ -76,7 +76,13 @@ int main(int argc, char* argv[])
 
 	//client.SendImage(img, extension);
 
-	
+	cv::Mat img2;
+	std::string extension2;
+	if (client.LoadImageFromPath(".\smol.png", img2, extension2))
+	{
+		std::cout << "failed to load second img\n";
+		return 0;
+	}
 	std::thread si1(&SendImageToServer, std::ref(client), img, extension);
 	//std::this_thread::sleep_for(std::chrono::milliseconds(20));
 	std::thread si2(&SendImageToServer, std::ref(client), img, extension);
