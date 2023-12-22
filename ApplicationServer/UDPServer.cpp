@@ -76,7 +76,7 @@ void UDPServer::ReceiveImageParallel()
 	size_t actualSize;
 	memcpy(&actualSize, sizeBuf, sizeof(size_t));
 	int port = usedPorts[usedPorts.size() - 1] + 1;
-	std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	std::cout << "Now sending info back" << std::endl;
 	sendto(serverSocket, (const char*)&port, sizeof(int), 0, (sockaddr*)&newClient, slen);
 	usedPorts.push_back(port);
@@ -136,12 +136,12 @@ void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size, int port
 	std::vector<uchar> imgData;
 	imgData.assign(buffer, buffer + size);
 	image = cv::imdecode(cv::Mat(imgData), 1);
+	mutex.lock();
 
 	cv::imshow("Thread img", image);
 	cv::waitKey(0);
 	cv::destroyWindow("Thread img");
 
-	mutex.lock();
 	closesocket(threadSocket);
 	for (int i = 0; i < usedPorts.size(); i++)
 	{
