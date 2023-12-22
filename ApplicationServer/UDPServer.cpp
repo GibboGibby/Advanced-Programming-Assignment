@@ -101,7 +101,7 @@ void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size, int port
 	sockaddr_in threadServer;
 	memset((char*)&threadServer, 0, sizeof(threadServer));
 	threadServer.sin_family = AF_INET;
-	threadServer.sin_addr.s_addr = client.sin_addr.s_addr;
+	threadServer.sin_addr.s_addr = server.sin_addr.s_addr;
 	threadServer.sin_port = htons(port);
 	if (bind(threadSocket, (sockaddr*)&threadServer, sizeof(threadServer)) == SOCKET_ERROR)
 	{
