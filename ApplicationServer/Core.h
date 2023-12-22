@@ -8,7 +8,7 @@
 #include <iostream>
 
 #define SERVER "127.0.0.1"
-#define PORT 8888
+#define PORT 8889
 
 #define UDP_BUF_SIZE 1357
 

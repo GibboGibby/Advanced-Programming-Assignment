@@ -12,6 +12,7 @@ private:
 	int slen = sizeof(sockaddr_in);
 	std::vector<std::thread::id> threadIDs;
 	std::vector<ULONG> clients;
+	std::vector<int> usedPorts;
 	int randomVal = 0;
 public:
 	bool Init();
@@ -20,7 +21,7 @@ public:
 	void StartReceiving();
 	cv::Mat ReceiveImage();
 	void ReceiveImageParallel();
-	void ReceivingAndProcessing(sockaddr_in client, size_t size);
+	void ReceivingAndProcessing(sockaddr_in client, size_t size, int port);
 	GibCore::ImageFilterParams ReceiveFilter();
 
 	void AddToClients(sockaddr_in client);

@@ -50,8 +50,19 @@ void UDPClient::SendImage(cv::Mat& img, std::string extension)
 	memcpy(sizeButChar, &val, sizeof(size_t));
 	int bufSize = sizeof(size_t);
 	sendto(clientSocket, sizeButChar, bufSize, 0, (sockaddr*)&server, sizeof(sockaddr_in));
+
+	char portChar[sizeof(int)];
+	sockaddr_in fromSock;
+	int slen = sizeof(sockaddr_in);
+	std::cout << "recieving\n";
+	recvfrom(clientSocket, portChar, sizeof(int),0, (sockaddr*)&fromSock, &slen);
+	int port;
+	memcpy(&port, &portChar, sizeof(int));
+	std::cout << "New port - " << port << std::endl;
+	server.sin_port = htons(port);
 	size_t remainingToSend = buf.size();
 	uchar* from = &buf[0];
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	while (remainingToSend > 0)
 	{
 		size_t sendSize = remainingToSend > UDP_BUF_SIZE ? UDP_BUF_SIZE : remainingToSend;

@@ -10,6 +10,7 @@ bool UDPServer::Init()
 	server.sin_family = AF_INET;
 	server.sin_addr.s_addr = INADDR_ANY;
 	server.sin_port = htons(PORT);
+	
 
 	return true;
 }
@@ -32,6 +33,8 @@ bool UDPServer::CreateSocket()
 	{
 		return false;
 	}
+	int optval = 1;
+	setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, (const char*) & optval, sizeof(optval));
 	return true; 
 }
 
@@ -41,6 +44,7 @@ bool UDPServer::BindServer()
 	{
 		return false;
 	}
+	usedPorts.push_back(8888);
 	return true;
 }
 
@@ -58,32 +62,50 @@ void UDPServer::ReceiveImageParallel()
 {
 	sockaddr_in newClient;
 	char sizeBuf[sizeof(size_t)];
+	/*
 	recvfrom(serverSocket, sizeBuf, sizeof(size_t), MSG_PEEK, (sockaddr*)&newClient, &slen);
 	if (CheckClients(newClient)) {
 		//std::cout << "Client already in the system\n";
 		return;
 	}
+	*/
 	//std::cout << "Sizebuf (before second recv) - " << sizeBuf << std::endl;
 	recvfrom(serverSocket, sizeBuf, sizeof(size_t), 0, (sockaddr*)&newClient, &slen);
 	//std::cout << "Sizebuf (after second recv) - " << sizeBuf << std::endl;
 	AddToClients(newClient);
 	size_t actualSize;
 	memcpy(&actualSize, sizeBuf, sizeof(size_t));
+	int port = usedPorts[usedPorts.size() - 1] + 1;
+	sendto(serverSocket, (const char*)&port, sizeof(int), 0, (sockaddr*)&newClient, slen);
+	usedPorts.push_back(port);
 
 	std::cout << "Size just after receive - " << actualSize << std::endl;
-	std::thread thr(&UDPServer::ReceivingAndProcessing, this, newClient, actualSize);
+	std::thread thr(&UDPServer::ReceivingAndProcessing, this, newClient, actualSize, port);
 	threadIDs.push_back(thr.get_id());
 	thr.detach();
 }
 
-void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size)
+void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size, int port)
 {
 
 	//std::cout << GetCurrentThreadId() << " - " << client.sin_addr.S_un.S_addr << std::endl;
-	std::cout << "\nCreating new thread\n";
+	std::cout << "\nCreating new thread on port - "<< port << std::endl;
 	SOCKET threadSocket;
 	threadSocket = socket(AF_INET, SOCK_DGRAM, 0);
-	connect(threadSocket, (sockaddr*)&client, sizeof(sockaddr_in));
+	int optval = 1;
+	setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, (const char*)&optval, sizeof(optval));
+	sockaddr_in threadServer;
+	memset((char*)&threadServer, 0, sizeof(threadServer));
+	threadServer.sin_family = AF_INET;
+	threadServer.sin_addr.s_addr = client.sin_addr.s_addr;
+	threadServer.sin_port = htons(port);
+	if (bind(threadSocket, (sockaddr*)&threadServer, sizeof(threadServer)) == SOCKET_ERROR)
+	{
+		std::cout << "Error binding another socket. error code - " << WSAGetLastError() << std::endl;
+		return;
+	}
+	std::cout << "Server bound successfully\n";
+	//connect(threadSocket, (sockaddr*)&client, sizeof(sockaddr_in));
 	char sizeBuf[sizeof(size_t)];
 	//recvfrom(serverSocket, sizeBuf, sizeof(size_t), 0, (sockaddr*)&client, &slen);
 
@@ -96,8 +118,9 @@ void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size)
 	while (remainingToReceieve > 0)
 	{
 		size_t sendSize = remainingToReceieve > UDP_BUF_SIZE ? UDP_BUF_SIZE : remainingToReceieve;
-		
-		while (recvfrom(serverSocket, (char*)bufferPos, UDP_BUF_SIZE, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR)
+		//sockaddr_in newClient;
+		std::cout << "Gets here\n";
+		while (recvfrom(threadSocket, (char*)bufferPos, UDP_BUF_SIZE, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR)
 		{
 			printf("RecvFrom Failed!\nThis reason: %i\n", WSAGetLastError());
 			printf("But this is being retried\n");
@@ -117,6 +140,17 @@ void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size)
 	cv::destroyWindow("Thread img");
 
 	mutex.lock();
+	for (int i = 0; i < usedPorts.size(); i++)
+	{
+		if (usedPorts[i] == port)
+		{
+			usedPorts.erase(usedPorts.begin() + i);
+			break;
+		}
+	}
+	mutex.unlock();
+	/*
+	mutex.lock();
 	RemoveFromClients(client);
 	for (int i = 0; i < threadIDs.size(); i++)
 	{
@@ -127,6 +161,7 @@ void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size)
 		}
 	}
 	mutex.unlock();
+	*/
 }
 //https://stackoverflow.com/questions/54155900/udp-server-and-connected-sockets
 // For connect which should filter the packets. need to test on dans pc
