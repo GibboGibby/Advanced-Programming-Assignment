@@ -142,6 +142,7 @@ void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size, int port
 	cv::destroyWindow("Thread img");
 
 	mutex.lock();
+	closesocket(threadSocket);
 	for (int i = 0; i < usedPorts.size(); i++)
 	{
 		if (usedPorts[i] == port)
