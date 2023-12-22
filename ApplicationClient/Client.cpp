@@ -13,10 +13,6 @@ void PrintHelp()
 	std::cout << "Help stuff" << std::endl;
 }
 
-void SendImageToServer(UDPClient cli, cv::Mat img, std::string ext)
-{
-	cli.SendImage(img, ext);
-}
 
 int main(int argc, char* argv[])
 {
@@ -78,16 +74,30 @@ int main(int argc, char* argv[])
 
 	cv::Mat img2;
 	std::string extension2;
-	if (client.LoadImageFromPath(".\smol.png", img2, extension2))
+	//std::string newStr;
+	//newStr = args[1].substr(0, 2);
+	//newStr += "smol.png";
+	/*
+* 
+	if (client.LoadImageFromPath(newStr, img2, extension2))
 	{
 		std::cout << "failed to load second img\n";
 		return 0;
 	}
-	std::thread si1(&SendImageToServer, std::ref(client), img, extension);
-	//std::this_thread::sleep_for(std::chrono::milliseconds(20));
-	std::thread si2(&SendImageToServer, std::ref(client), img, extension);
+	*/
+	img2 = cv::imread(".\\smol.png");
+	extension2 = ".png";
+	client.SendImageMultiThreaded(img, extension, img2, extension2);
+
+	//std::thread si1(&SendImageToServer, std::ref(client), img, extension);
+	/*
+	std::thread si1(&SendImageToServer, std::ref(client), std::ref(img), std::ref(extension));
+	std::this_thread::sleep_for(std::chrono::milliseconds(200));
+	std::thread si2(&SendImageToServer, std::ref(client), std::ref(img2), std::ref(extension2));
 	si1.join();
 	si2.join();
+	*/
+
 	
 	
 

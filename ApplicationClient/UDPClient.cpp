@@ -27,7 +27,8 @@ bool UDPClient::CreateSocket()
 
 bool UDPClient::LoadImageFromPath(std::string path, cv::Mat& img, std::string& extension)
 {
-	// Checks if file exists and then loads the file
+	// Checks if file exists and then loads the 
+	std::cout << "img path - " << path << std::endl;
 	std::ifstream fstream(path.c_str());
 	int ext = strlen(path.c_str());
 	for (int i = ext - 4; i < ext; i++)
@@ -49,25 +50,39 @@ void UDPClient::SendImage(cv::Mat& img, std::string extension)
 	char sizeButChar[sizeof(size_t)];
 	memcpy(sizeButChar, &val, sizeof(size_t));
 	int bufSize = sizeof(size_t);
-	sendto(clientSocket, sizeButChar, bufSize, 0, (sockaddr*)&server, sizeof(sockaddr_in));
-
+	//mutex.lock();
+	if (sendto(clientSocket, sizeButChar, bufSize, 0, (sockaddr*)&server, sizeof(sockaddr_in)) == SOCKET_ERROR)
+	{
+		std::cout << "Sendto error on sending size. Error code: " << WSAGetLastError() << std::endl;
+	}
 	char portChar[sizeof(int)];
 	sockaddr_in fromSock;
 	int slen = sizeof(sockaddr_in);
 	std::cout << "recieving\n";
-	//std::this_thread::sleep_for(std::chrono::milliseconds(50));
-	recvfrom(clientSocket, portChar, sizeof(int),0, (sockaddr*)&fromSock, &slen);
+	std::this_thread::sleep_for(std::chrono::milliseconds(50));
+	
+	if ((recvfrom(clientSocket, portChar, sizeof(int), 0, (sockaddr*)&fromSock, &slen)) == SOCKET_ERROR)
+	{
+		std::cout << "Recvfrom error on getting port. Error code: " << WSAGetLastError() << std::endl;
+	}
+	//mutex.unlock();
 	int port;
 	memcpy(&port, &portChar, sizeof(int));
 	std::cout << "New port - " << port << std::endl;
-	server.sin_port = htons(port);
+	sockaddr_in tempServer;
+	memset((char*)&tempServer, 0, sizeof(tempServer));
+
+	tempServer.sin_family = AF_INET;
+	tempServer.sin_port = htons(port);
+	tempServer.sin_addr.s_addr = server.sin_addr.s_addr;
+
 	size_t remainingToSend = buf.size();
 	uchar* from = &buf[0];
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	while (remainingToSend > 0)
 	{
 		size_t sendSize = remainingToSend > UDP_BUF_SIZE ? UDP_BUF_SIZE : remainingToSend;
-		while (sendto(clientSocket, (const char*)from, sendSize, 0, (const struct sockaddr*)&server, sizeof(server)) < 0)
+		while (sendto(clientSocket, (const char*)from, sendSize, 0, (const struct sockaddr*)&tempServer, sizeof(tempServer)) < 0)
 		{
 			printf("Error during send, retrying...\n");
 		}
@@ -76,6 +91,15 @@ void UDPClient::SendImage(cv::Mat& img, std::string extension)
 		std::cout << remainingToSend << " - What is left to send" << std::endl;
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
+}
+
+void UDPClient::SendImageMultiThreaded(cv::Mat& img, std::string extension, cv::Mat& img2, std::string extension2)
+{
+	std::thread si1(&UDPClient::SendImage, this, std::ref(img), extension);
+	std::this_thread::sleep_for(std::chrono::milliseconds(20));
+	std::thread si2(&UDPClient::SendImage, this, std::ref(img2), extension2);
+	si1.join();
+	si2.join();
 }
 
 void UDPClient::SendFilter(GibCore::ImageFilterParams params)

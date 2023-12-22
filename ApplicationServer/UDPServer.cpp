@@ -78,8 +78,8 @@ void UDPServer::ReceiveImageParallel()
 	int port = usedPorts[usedPorts.size() - 1] + 1;
 	//std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	std::cout << "Now sending info back" << std::endl;
-	usedPorts.push_back(port);
 
+	usedPorts.push_back(port);
 	std::cout << "Size just after receive - " << actualSize << std::endl;
 	std::thread thr(&UDPServer::ReceivingAndProcessing, this, newClient, actualSize, port);
 	threadIDs.push_back(thr.get_id());
@@ -123,7 +123,7 @@ void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size, int port
 	{
 		size_t sendSize = remainingToReceieve > UDP_BUF_SIZE ? UDP_BUF_SIZE : remainingToReceieve;
 		//sockaddr_in newClient;
-		std::cout << "Gets here\n";
+		//std::cout << "Gets here\n";
 		while (recvfrom(threadSocket, (char*)bufferPos, UDP_BUF_SIZE, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR)
 		{
 			printf("RecvFrom Failed!\nThis reason: %i\n", WSAGetLastError());
