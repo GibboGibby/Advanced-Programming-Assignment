@@ -30,7 +30,7 @@ public:
 
 	std::string GetEnumFilterName(GibCore::ImageFilter filter);
 
-	bool VerifyImage();
+	bool VerifyImage(cv::Mat& img, SOCKET& threadSocket, sockaddr_in client);
 
 	cv::Mat Filter();
 

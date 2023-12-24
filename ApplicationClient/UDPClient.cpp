@@ -91,6 +91,9 @@ void UDPClient::SendImage(cv::Mat& img, std::string extension)
 		std::cout << remainingToSend << " - What is left to send" << std::endl;
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
+	
+	bool verified = VerifyImage(img, clientSocket, tempServer);
+	std::cout << "value of verified - " << verified << std::endl;
 }
 
 void UDPClient::SendImageMultiThreaded(cv::Mat& img, std::string extension, cv::Mat& img2, std::string extension2)
@@ -112,16 +115,18 @@ void UDPClient::SendFilter(GibCore::ImageFilterParams params)
 	sendto(clientSocket, (const char*)&params, sizeof(GibCore::ImageFilterParams), 0, (sockaddr*)&server, sizeof(sockaddr_in));
 }
 
-bool UDPClient::VerifyImage()
+
+bool UDPClient::VerifyImage(cv::Mat& img, SOCKET& clientSocket, sockaddr_in& tempServer)
 {
+	double hash = GibCore::CalculateHash(img);
+	sendto(clientSocket, (char*)&hash, sizeof(double), 0, (sockaddr*)&tempServer, sizeof(sockaddr_in));
+	char verified[sizeof(bool)];
+	sockaddr_in received;
 	int slen = sizeof(sockaddr_in);
-	char textBuffer[1024];
-	if (recvfrom(clientSocket, (char*)textBuffer, 1024, 0, (sockaddr*)&server, &slen) == SOCKET_ERROR)
-	{
-		printf("Failed receiving message back");
-		return false;
-	}
-	return true;
+	recvfrom(clientSocket, verified, sizeof(bool), 0, (sockaddr*)&received, &slen);
+	bool conv;
+	memcpy(&conv, verified, sizeof(bool));
+	return conv;
 }
 
 void UDPClient::CloseAndCleanup()

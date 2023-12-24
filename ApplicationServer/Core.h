@@ -16,9 +16,29 @@
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/highgui.hpp"
 
+#include "opencv2/img_hash/average_hash.hpp"
+
 
 namespace GibCore
 {
+
+	inline double CalculateHash(cv::Mat& img)
+	{
+		cv::Mat hashedImg;
+		cv::Ptr<cv::img_hash::AverageHash> m = cv::img_hash::AverageHash::create();
+		m->compute(img, hashedImg);
+		double avgSum = 0.0;
+		double count = 0;
+		for (int i = 0; i < hashedImg.cols; i++)
+		{
+			//std::cout << i << " - " << int(hashedImg.at<uchar>(0, i)) << std::endl;
+			avgSum += double(hashedImg.at<uchar>(0, i));
+			count++;
+		}
+		double avg = avgSum / count;
+		std::cout << "This is the average - " << avg << std::endl;
+		return avg;
+	}
 
 	enum class ImageFilter
 	{

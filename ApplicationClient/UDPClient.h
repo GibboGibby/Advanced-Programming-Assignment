@@ -20,7 +20,7 @@ public:
 	void SendImage(cv::Mat& img, std::string extension);
 	void SendImageMultiThreaded(cv::Mat& img, std::string extension, cv::Mat& img2, std::string extension2);
 	void SendFilter(GibCore::ImageFilterParams params);
-	bool VerifyImage();
+	bool VerifyImage(cv::Mat& img, SOCKET& clientSocket, sockaddr_in& tempServer);
 
 	void CloseAndCleanup();
 

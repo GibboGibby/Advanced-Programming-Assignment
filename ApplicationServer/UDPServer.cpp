@@ -138,6 +138,9 @@ void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size, int port
 	std::vector<uchar> imgData;
 	imgData.assign(buffer, buffer + size);
 	image = cv::imdecode(cv::Mat(imgData), 1);
+
+	bool verified = VerifyImage(image, threadSocket, client);
+	std::cout << "Verified value - " << verified << std::endl;
 	mutex.lock();
 
 	cv::imshow("Thread img", image);
@@ -239,6 +242,7 @@ cv::Mat UDPServer::ReceiveImage()
 	vec.assign(buffer, buffer + actualSize);
 
 	image = cv::imdecode(cv::Mat(vec), 1);
+
 	return image;
 }
 
@@ -308,6 +312,22 @@ std::string UDPServer::GetEnumFilterName(GibCore::ImageFilter filter)
 	default:
 		return "Unknown";
 	}
+}
+
+bool UDPServer::VerifyImage(cv::Mat& img, SOCKET& threadSocket, sockaddr_in client)
+{
+	double hash = GibCore::CalculateHash(img);
+	char buf[sizeof(double)];
+	sockaddr_in newClient;
+	recvfrom(threadSocket, buf, sizeof(double), 0, (sockaddr*)&newClient, &slen);
+	double otherHash = 0;
+	memcpy(&otherHash, buf, sizeof(double));
+	bool isHash = hash == otherHash;
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	mutex.lock();
+	sendto(serverSocket, (char*) & isHash, sizeof(char), 0, (sockaddr*)&client, slen);
+	mutex.unlock();
+	return hash == otherHash;
 }
 
 void UDPServer::CloseAndCleanup()
