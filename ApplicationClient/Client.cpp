@@ -28,11 +28,12 @@ int main(int argc, char* argv[])
 		PrintHelp();
 		return 1;
 	}
-	if (args[0] == "help")
+	if (args[0] == "help" || argc < 3)
 	{
 		PrintHelp();
 		return 1;
 	}
+
 
 	// args contains the input parameters
 
@@ -43,6 +44,25 @@ int main(int argc, char* argv[])
 	std::string delim = ":";
 	std::string left = args[0].substr(0, args[0].find(delim));
 	std::string right = args[0].substr(args[0].find(delim) + 1, args[0].length());
+
+	// Read the image filter params from the arguments
+	GibCore::ImageFilterParams param;
+	param.filter = client.FilterFromString(args[2]);
+	if (param.filter == GibCore::ImageFilter::NOTHING)
+	{
+		std::cout << "Not a valid filtering option" << std::endl;
+		return 1;
+	}
+
+	// Checks to see if the correct number of arguments have been passed for the specific image filter (Too many is fine, too few bad)
+	int amount = args.size() - 3;
+	int val = GibCore::ImageFilterParamsSize.find(param.filter)->second;
+	if (amount < val)
+	{
+		std::cout << "incorrect parameters typed! - " << args[2] << " requres " << val << " parameters" << std::endl;
+		PrintHelp();
+		return 1;
+	}
 
 	// Initialize Winsock
 	if (!client.Init(std::stoi(right), left))
@@ -87,7 +107,11 @@ int main(int argc, char* argv[])
 	*/
 	img2 = cv::imread(".\\smol.png");
 	extension2 = ".png";
-	client.SendImageMultiThreaded(img, extension, img2, extension2);
+
+	//client.SendImageMultiThreaded(img, extension, img2, extension2);
+	client.SendImage(img, extension);
+	
+
 
 	//std::thread si1(&SendImageToServer, std::ref(client), img, extension);
 	/*
@@ -105,8 +129,6 @@ int main(int argc, char* argv[])
 	std::cout << "Both threads executed" << std::endl;
 	// Create and send filter object
 	// Contains what filter to use and the parameters
-	GibCore::ImageFilterParams param;
-	param.filter = client.FilterFromString(args[2]);
 	// Converts remaining parameters into a long string
 	std::string longStr;
 	for (int i = 3; i < args.size(); i++)
@@ -117,8 +139,19 @@ int main(int argc, char* argv[])
 	strcpy_s(param.params, longStr.c_str());
 
 	// Send the filter to the server
-	//client.SendFilter(param);
+	client.SendFilter(param);
 
+	cv::Mat recvimg = client.ReceieveImage(client.GetSocket());
+	std::string path;
+	int ext = strlen(args[1].c_str());
+	for (int i = 0; i < ext -4; i++)
+	{
+		path += args[1][i];
+	}
+	path += "_" + args[2] + extension;
+	
+	std::cout << "new path";
+	client.SaveImage(recvimg, path);
 
 	client.CloseAndCleanup();
 }

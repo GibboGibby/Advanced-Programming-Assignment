@@ -21,6 +21,11 @@ public:
 	void SendImageMultiThreaded(cv::Mat& img, std::string extension, cv::Mat& img2, std::string extension2);
 	void SendFilter(GibCore::ImageFilterParams params);
 	bool VerifyImage(cv::Mat& img, SOCKET& clientSocket, sockaddr_in& tempServer);
+	cv::Mat ReceieveImage(SOCKET& clientSocket);
+
+	void SaveImage(cv::Mat& img, std::string name);
+
+	SOCKET& GetSocket() { return clientSocket; }
 
 	void CloseAndCleanup();
 

@@ -2,6 +2,7 @@
 #include "Core.h"
 #include <iostream>
 #include <mutex>
+#include "Filters.h"
 class UDPServer
 {
 private:
@@ -32,8 +33,16 @@ public:
 
 	bool VerifyImage(cv::Mat& img, SOCKET& threadSocket, sockaddr_in client);
 
-	cv::Mat Filter();
+	GibCore::ImageFilterParams ReceieveFilter(SOCKET& threadSocket);
+	cv::Mat FilterImage(cv::Mat& img, GibCore::ImageFilterParams& params);
+
+	void SendImage(cv::Mat& img,std::string& ext, SOCKET& threadSocket, sockaddr_in clientSocket);
+
+	//cv::Mat Filter();
 
 	void CloseAndCleanup();
+
+private:
+	Filter* GetFilterFromEnum(GibCore::ImageFilter filter);
 };
 

@@ -75,6 +75,7 @@ void UDPClient::SendImage(cv::Mat& img, std::string extension)
 	tempServer.sin_family = AF_INET;
 	tempServer.sin_port = htons(port);
 	tempServer.sin_addr.s_addr = server.sin_addr.s_addr;
+	server.sin_port = htons(port);
 
 	size_t remainingToSend = buf.size();
 	uchar* from = &buf[0];
@@ -129,6 +130,55 @@ bool UDPClient::VerifyImage(cv::Mat& img, SOCKET& clientSocket, sockaddr_in& tem
 	return conv;
 }
 
+cv::Mat UDPClient::ReceieveImage(SOCKET& clientSocket)
+{
+	std::cout << "receiving image";
+	sockaddr_in server;
+	char sizeBuf[sizeof(size_t)];
+	int slen = sizeof(sockaddr_in);
+	recvfrom(clientSocket, sizeBuf, sizeof(size_t), 0, (sockaddr*)&server, &slen);
+
+	size_t actualSize;
+	memcpy(&actualSize, sizeBuf, sizeof(size_t));
+
+	char* buffer = new char[actualSize];
+	std::cout << "Parallel actual size - " << actualSize << std::endl;
+	size_t remainingToReceieve = actualSize;
+
+	char* bufferPos = &buffer[0];
+	while (remainingToReceieve > 0)
+	{
+		size_t sendSize = remainingToReceieve > UDP_BUF_SIZE ? UDP_BUF_SIZE : remainingToReceieve;
+		//sockaddr_in newClient;
+		//std::cout << "Gets here\n";
+		while (recvfrom(clientSocket, (char*)bufferPos, UDP_BUF_SIZE, 0, (sockaddr*)&server, &slen) == SOCKET_ERROR)
+		{
+			printf("RecvFrom Failed!\nThis reason: %i\n", WSAGetLastError());
+			printf("But this is being retried\n");
+		}
+		remainingToReceieve -= sendSize;
+		bufferPos += sendSize;
+		std::cout << "This is the amount received - " << remainingToReceieve << std::endl;
+
+	}
+	cv::Mat image;
+	std::vector<uchar> imgData;
+	imgData.assign(buffer, buffer + actualSize);
+	image = cv::imdecode(cv::Mat(imgData), 1);
+	delete[] buffer;
+
+	cv::imshow("client img", image);
+	cv::waitKey(0);
+	cv::destroyWindow("client img");
+
+	return image;
+}
+
+void UDPClient::SaveImage(cv::Mat& img, std::string nameAndPath)
+{
+	cv::imwrite(nameAndPath, img);
+}
+
 void UDPClient::CloseAndCleanup()
 {
 	closesocket(clientSocket);
@@ -141,13 +191,14 @@ GibCore::ImageFilter UDPClient::FilterFromString(std::string str)
 	std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) {return std::tolower(c); });
 
 	if (str == "resize") return GibCore::ImageFilter::RESIZE;
-	else if (str == "rotation") return GibCore::ImageFilter::ROTATION;
-	else if (str == "cropping") return GibCore::ImageFilter::CROPPING;
-	else if (str == "flipping") return GibCore::ImageFilter::FLIPPING;
+	else if (str == "rotation" || str == "rotate") return GibCore::ImageFilter::ROTATION;
+	else if (str == "cropping" || str == "crop") return GibCore::ImageFilter::CROPPING;
+	else if (str == "flipping" || str == "flip") return GibCore::ImageFilter::FLIPPING;
 	else if (str == "brightness") return GibCore::ImageFilter::BRIGHTNESSADJUST;
 	else if (str == "contrast") return GibCore::ImageFilter::CONTRASTADJUST;
 	else if (str == "gamma") return GibCore::ImageFilter::GAMMACORRECTION;
-	else if (str == "colour-space") return GibCore::ImageFilter::CHANGECOLORSPACE;
+	else if (str == "hsv") return GibCore::ImageFilter::TOHSV;
+	else if (str == "grayscale") return GibCore::ImageFilter::TOGREYSCALE;
 	else if (str == "gaussianblur") return GibCore::ImageFilter::GAUSSIANBLUR;
 	else if (str == "boxblur") return GibCore::ImageFilter::BOXBLUR;
 	else if (str == "sharpening") return GibCore::ImageFilter::SHARPENING;

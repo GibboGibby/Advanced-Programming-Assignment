@@ -138,14 +138,23 @@ void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size, int port
 	std::vector<uchar> imgData;
 	imgData.assign(buffer, buffer + size);
 	image = cv::imdecode(cv::Mat(imgData), 1);
+	delete[] buffer;
 
 	bool verified = VerifyImage(image, threadSocket, client);
 	std::cout << "Verified value - " << verified << std::endl;
 	mutex.lock();
 
-	cv::imshow("Thread img", image);
-	cv::waitKey(0);
-	cv::destroyWindow("Thread img");
+	//cv::imshow("Thread img", image);
+	//cv::waitKey(0);
+	//cv::destroyWindow("Thread img");
+
+	GibCore::ImageFilterParams params = ReceieveFilter(threadSocket);
+	cv::Mat filteredImage = FilterImage(image, params);
+	//cv::imshow("Thread img", filteredImage);
+	//cv::waitKey(0);
+	//cv::destroyWindow("Thread img");
+	std::string val = std::string(".jpg");
+	SendImage(filteredImage, val, threadSocket, client);
 
 	closesocket(threadSocket);
 	for (int i = 0; i < usedPorts.size(); i++)
@@ -157,6 +166,10 @@ void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size, int port
 		}
 	}
 	mutex.unlock();
+
+	//Filter* filterToUse = CreateFilter<Rotate>();
+	//filterToUse->SetImage();
+
 	/*
 	mutex.lock();
 	RemoveFromClients(client);
@@ -240,7 +253,7 @@ cv::Mat UDPServer::ReceiveImage()
 	cv::Mat image;
 	std::vector<uchar> vec;
 	vec.assign(buffer, buffer + actualSize);
-
+	delete[] buffer;
 	image = cv::imdecode(cv::Mat(vec), 1);
 
 	return image;
@@ -301,8 +314,10 @@ std::string UDPServer::GetEnumFilterName(GibCore::ImageFilter filter)
 		return "ContrastAdjust";
 	case GibCore::ImageFilter::GAMMACORRECTION:
 		return "GammaCorrection";
-	case GibCore::ImageFilter::CHANGECOLORSPACE:
-		return "ChangeColorSpace";
+	case GibCore::ImageFilter::TOHSV:
+		return "HSV";
+	case GibCore::ImageFilter::TOGREYSCALE:
+		return "Greyscale";
 	case GibCore::ImageFilter::GAUSSIANBLUR:
 		return "GaussianBlur";
 	case GibCore::ImageFilter::BOXBLUR:
@@ -325,13 +340,90 @@ bool UDPServer::VerifyImage(cv::Mat& img, SOCKET& threadSocket, sockaddr_in clie
 	bool isHash = hash == otherHash;
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	mutex.lock();
-	sendto(serverSocket, (char*) & isHash, sizeof(char), 0, (sockaddr*)&client, slen);
+	sendto(threadSocket, (char*) & isHash, sizeof(char), 0, (sockaddr*)&client, slen);
 	mutex.unlock();
 	return hash == otherHash;
+}
+
+GibCore::ImageFilterParams UDPServer::ReceieveFilter(SOCKET& threadSocket)
+{
+	GibCore::ImageFilterParams params;
+	char paramsBuffer[sizeof(GibCore::ImageFilterParams)];
+	// Receieve
+	sockaddr_in newCli;
+	recvfrom(threadSocket, (char*)paramsBuffer, sizeof(GibCore::ImageFilterParams), 0, (sockaddr*)&newCli, &slen);
+	memcpy(&params, paramsBuffer, sizeof(GibCore::ImageFilterParams));
+	return params;
+}
+
+cv::Mat UDPServer::FilterImage(cv::Mat& img, GibCore::ImageFilterParams& params)
+{
+	// Convert params.params into a vector of strings
+	std::stringstream ss(params.params);
+	std::vector<std::string> parameters;
+	std::string temp;
+	while (ss >> temp)
+		parameters.push_back(temp);
+
+	//Filter
+	Filter* filter =  GetFilterFromEnum(params.filter);
+	//filter->SetImage(img);
+	//filter->SetParams(parameters);
+	cv::Mat filteredImage = filter->RunFilter(img, parameters);
+	return filteredImage;
+}
+
+void UDPServer::SendImage(cv::Mat& img, std::string& ext, SOCKET& threadSocket, sockaddr_in clientSocket)
+{
+
+	std::vector<uchar> buf;
+	cv::imencode(ext, img, buf);
+	size_t imgSize = buf.size();
+	char sizeChar[sizeof(size_t)];
+	memcpy(sizeChar, &imgSize, sizeof(size_t));
+	while (sendto(threadSocket, sizeChar, sizeof(size_t), 0, (sockaddr*)&clientSocket, slen) == SOCKET_ERROR)
+	{
+		std::cout << "Error sending the size back to the client" << std::endl;
+	}
+
+	size_t remainingToSend = buf.size();
+	uchar* from = &buf[0];
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	while (remainingToSend > 0)
+	{
+		size_t sendSize = remainingToSend > UDP_BUF_SIZE ? UDP_BUF_SIZE : remainingToSend;
+		while (sendto(threadSocket, (const char*)from, sendSize, 0, (sockaddr*)&clientSocket, slen) == SOCKET_ERROR)
+		{
+			printf("Error during send, retrying...\n");
+		}
+		remainingToSend -= sendSize;
+		from += sendSize;
+		std::cout << remainingToSend << " - What is left to send" << std::endl;
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	}
+
+
+	//sendto(threadSocket, (char*)&isHash, sizeof(char), 0, (sockaddr*)&client, slen);
+
+	//while ()
+	size_t remainingToReceieve;
 }
 
 void UDPServer::CloseAndCleanup()
 {
 	closesocket(serverSocket);
 	WSACleanup();
+}
+
+Filter* UDPServer::GetFilterFromEnum(GibCore::ImageFilter filter)
+{
+	//Filter* filter;
+
+	switch (filter)
+	{
+	case GibCore::ImageFilter::ROTATION:
+		return CreateFilter<Rotate>();
+	case GibCore::ImageFilter::TOGREYSCALE:
+		return CreateFilter<Greyscale>();
+	}
 }

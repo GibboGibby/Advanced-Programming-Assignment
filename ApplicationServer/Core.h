@@ -17,10 +17,16 @@
 #include "opencv2/highgui.hpp"
 
 #include "opencv2/img_hash/average_hash.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+
+#include "Filter.h"
+
+#include <type_traits>
 
 
 namespace GibCore
 {
+	
 
 	inline double CalculateHash(cv::Mat& img)
 	{
@@ -49,7 +55,9 @@ namespace GibCore
 		BRIGHTNESSADJUST,
 		CONTRASTADJUST,
 		GAMMACORRECTION,
-		CHANGECOLORSPACE,
+		TOHSV,
+		TOGREYSCALE,
+		TORGB,
 		GAUSSIANBLUR,
 		BOXBLUR,
 		SHARPENING,
@@ -63,6 +71,29 @@ namespace GibCore
 		char params[1024];
 	};
 
+	/*
+	std::pair<ImageFilter, int>(ImageFilter::RESIZE, 2),
+	std::pair<ImageFilter, int>(ImageFilter::ROTATION, 1)
+	};
+	std::map<ImageFilter, int> imageFilterParams = {
+	*/
+	const std::map<ImageFilter, int> ImageFilterParamsSize = {
+		{ImageFilter::RESIZE, 2},
+		{ImageFilter::ROTATION, 1},
+		{ImageFilter::BOXBLUR, 2},
+		{ImageFilter::TOGREYSCALE, 0}
+	};
 	//extern std::map<ImageFilter, >
+
+	//Factory
 	
+	
+}
+
+class Filter;
+template<typename T>
+T* CreateFilter()
+{
+	static_assert(std::is_base_of<Filter, T>::value, "T must inherit from the Filter class");
+	return new T();
 }
