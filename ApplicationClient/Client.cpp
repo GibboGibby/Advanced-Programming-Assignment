@@ -148,7 +148,13 @@ int main(int argc, char* argv[])
 	{
 		path += args[1][i];
 	}
-	path += "_" + args[2] + extension;
+	path += "_" + args[2];// + extension;
+
+	for (int i = 3; i < args.size(); i++)
+	{
+		path += "_" + args[i];
+	}
+	path += extension;
 	
 	std::cout << "new path";
 	client.SaveImage(recvimg, path);

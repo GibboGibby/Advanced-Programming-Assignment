@@ -425,5 +425,13 @@ Filter* UDPServer::GetFilterFromEnum(GibCore::ImageFilter filter)
 		return CreateFilter<Rotate>();
 	case GibCore::ImageFilter::TOGREYSCALE:
 		return CreateFilter<Greyscale>();
+	case GibCore::ImageFilter::FLIPPING:
+		return CreateFilter<Flip>();
+	case GibCore::ImageFilter::RESIZE:
+		return CreateFilter<Resize>();
+	case GibCore::ImageFilter::CROPPING:
+		return CreateFilter<Crop>();
+	case GibCore::ImageFilter::BOXBLUR:
+		return CreateFilter<BoxBlur>();
 	}
 }
