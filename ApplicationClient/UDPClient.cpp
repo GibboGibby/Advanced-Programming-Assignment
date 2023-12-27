@@ -201,7 +201,7 @@ GibCore::ImageFilter UDPClient::FilterFromString(std::string str)
 	else if (str == "grayscale") return GibCore::ImageFilter::TOGREYSCALE;
 	else if (str == "gaussianblur") return GibCore::ImageFilter::GAUSSIANBLUR;
 	else if (str == "boxblur") return GibCore::ImageFilter::BOXBLUR;
-	else if (str == "sharpening") return GibCore::ImageFilter::SHARPENING;
+	else if (str == "sharpening" || str == "sharpen") return GibCore::ImageFilter::SHARPENING;
 	else return GibCore::ImageFilter::NOTHING;
 	//return GibCore::ImageFilter::RESIZE;
 }

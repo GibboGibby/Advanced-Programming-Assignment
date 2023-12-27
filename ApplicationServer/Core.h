@@ -84,7 +84,8 @@ namespace GibCore
 		{ImageFilter::TOGREYSCALE, 0},
 		{ImageFilter::FLIPPING, 1},
 		{ImageFilter::CROPPING, 2},
-		{ImageFilter::BOXBLUR, 0}
+		{ImageFilter::BOXBLUR, 0},
+		{ImageFilter::SHARPENING, 0}
 	};
 	//extern std::map<ImageFilter, >
 

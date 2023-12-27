@@ -44,6 +44,7 @@ cv::Mat Greyscale::RunFilter(cv::Mat& img, std::vector<std::string>& params)
             newImg.at<cv::Vec3b>(i, j) = pixel;
         }
     }
+    //https://support.ptc.com/help/mathcad/r9.0/en/index.html#page/PTC_Mathcad_Help/example_grayscale_and_color_in_images.html
     return newImg;
 }
 
@@ -152,5 +153,18 @@ cv::Mat BoxBlur::RunFilter(cv::Mat& img, std::vector<std::string>& params)
         }
     }
     //cv::blur(img, boxBlurImg, cv::Size(3, 3));
+    //https://en.wikipedia.org/wiki/Box_blur
     return boxBlurImg;
+}
+
+cv::Mat Sharpening::RunFilter(cv::Mat& img, std::vector<std::string>& params)
+{
+    cv::Mat sharpenedImg;
+    //cv::InputArray kernel([[-1, -1, -1], [-1, 9, -1], [-1, -1, -1]] );
+    cv::Mat sharpeningKernel = (cv::Mat_<double>(3, 3) << -1, -1, -1,
+        -1, 9, -1,
+        -1, -1, -1);
+    cv::filter2D(img, sharpenedImg, -1, sharpeningKernel);
+    //https://answers.opencv.org/question/216383/how-could-do-sharpness-images/
+    return sharpenedImg;
 }

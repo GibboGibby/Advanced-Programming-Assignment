@@ -433,5 +433,7 @@ Filter* UDPServer::GetFilterFromEnum(GibCore::ImageFilter filter)
 		return CreateFilter<Crop>();
 	case GibCore::ImageFilter::BOXBLUR:
 		return CreateFilter<BoxBlur>();
+	case GibCore::ImageFilter::SHARPENING:
+		return CreateFilter<Sharpening>();
 	}
 }

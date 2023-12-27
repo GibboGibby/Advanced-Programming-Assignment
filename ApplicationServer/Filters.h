@@ -37,3 +37,8 @@ class BoxBlur : public Filter
 {
 	cv::Mat RunFilter(cv::Mat& img, std::vector<std::string>& params);
 };
+
+class Sharpening : public Filter
+{
+	cv::Mat RunFilter(cv::Mat& img, std::vector<std::string>& params);
+};
