@@ -178,20 +178,33 @@ cv::Mat BoxBlur::RunFilter(cv::Mat& img, std::vector<std::string>& params)
         sizeX = stoi(params[0]);
         sizeY = stoi(params[1]);
     }
+    if (params.size() == 3)
+    {
+        if (params[2] == "parallel")
+        {
+            return BoxBlurMutliThreaded(img, sizeX, sizeY);
+        }
+    }
+    return BoxBlurSingleThreaded(img, sizeX, sizeY);
+}
+
+cv::Mat BoxBlur::BoxBlurSingleThreaded(cv::Mat& img, int sizeX, int sizeY)
+{
+    auto start = std::chrono::high_resolution_clock::now();
     cv::Mat boxBlurImg = img;
-    
+
     for (int i = 0; i < boxBlurImg.rows; i++)
     {
-    
+
         for (int j = 0; j < boxBlurImg.cols; j++)
         {
             int red = 0;
             int green = 0;
             int blue = 0;
             int count = 0;
-            for (int x = -((sizeX-1)/2); x < (((sizeX-1)/2)+1); x++)
+            for (int x = -((sizeX - 1) / 2); x < (((sizeX - 1) / 2) + 1); x++)
             {
-                for (int y = -((sizeX-1)/2); y < (((sizeX-1)/2)+1); y++)
+                for (int y = -((sizeX - 1) / 2); y < (((sizeX - 1) / 2) + 1); y++)
                 {
                     int tempX = i + x;
                     int tempY = j + y;
@@ -216,9 +229,85 @@ cv::Mat BoxBlur::RunFilter(cv::Mat& img, std::vector<std::string>& params)
             boxBlurImg.at<cv::Vec3b>(i, j) = temp;
         }
     }
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "duration of box blur - " << duration.count();
     //cv::blur(img, boxBlurImg, cv::Size(3, 3));
     //https://en.wikipedia.org/wiki/Box_blur
     return boxBlurImg;
+}
+
+cv::Mat BoxBlur::BoxBlurMutliThreaded(cv::Mat& img, int sizeX, int sizeY)
+{
+    cv::Mat newImg = img;
+    int size = std::round((double)img.rows / NUM_THREADS);
+    auto start = std::chrono::high_resolution_clock::now();
+    std::vector<std::thread> threads;
+    for (int i = 0; i < NUM_THREADS; i++)
+    {
+        std::thread t1(&BoxBlur::BoxBlurThread, this, std::ref(newImg), newImg, i * size, size, sizeX, sizeY);
+        threads.push_back(std::move(t1));
+    }
+
+    for (int i = 0; i < threads.size(); i++)
+    {
+        threads[i].join();
+    }
+
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "duration of box blur - " << duration.count();
+    return newImg;
+}
+
+void BoxBlur::BoxBlurThread(cv::Mat& origImg, cv::Mat tempImg, int startPos, int size, int sizeX, int sizeY)
+{
+    cv::Mat boxBlurImg = tempImg;
+    for (int i = startPos; i < startPos + size; i++)
+    {
+        if (i > tempImg.cols) continue;
+        for (int j = 0; j < tempImg.cols; j++)
+        {
+            int red = 0;
+            int green = 0;
+            int blue = 0;
+            int count = 0;
+            for (int x = -((sizeX - 1) / 2); x < (((sizeX - 1) / 2) + 1); x++)
+            {
+                for (int y = -((sizeX - 1) / 2); y < (((sizeX - 1) / 2) + 1); y++)
+                {
+                    int tempX = i + x;
+                    int tempY = j + y;
+                    if (tempX < 0 || tempX >= boxBlurImg.rows || tempY < 0 || tempY >= boxBlurImg.cols) continue;
+                    cv::Vec3b temp = boxBlurImg.at<cv::Vec3b>(tempX, tempY);
+                    //std::cout << "Current x val - " << i + x << std::endl;
+                    //std::cout << "Current y val - " << j + y << std::endl;
+                    blue += (int)temp[0];
+                    green += (int)temp[1];
+                    red += (int)temp[2];
+                    count++;
+                }
+            }
+            //sum / count;
+            cv::Vec3b temp;
+            red = red / count;
+            green = green / count;
+            blue = blue / count;
+            temp[0] = (uchar)blue;
+            temp[1] = (uchar)green;
+            temp[2] = (uchar)red;
+            boxBlurImg.at<cv::Vec3b>(i, j) = temp;
+        }
+    }
+    mutex.lock();
+    for (int i = startPos; i < startPos + size; i++)
+    {
+        for (int j = 0; j < tempImg.cols; j++)
+        {
+            origImg.at<cv::Vec3b>(i, j) = tempImg.at<cv::Vec3b>(i, j);
+        }
+    }
+    mutex.unlock();
 }
 
 cv::Mat Sharpening::RunFilter(cv::Mat& img, std::vector<std::string>& params)
