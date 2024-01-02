@@ -186,7 +186,7 @@ void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size, int port
 }
 //https://stackoverflow.com/questions/54155900/udp-server-and-connected-sockets
 // For connect which should filter the packets. need to test on dans pc
-/*
+
 cv::Mat UDPServer::ReceiveImage()
 {
 	char sizeBuf[sizeof(size_t)];
@@ -197,11 +197,9 @@ cv::Mat UDPServer::ReceiveImage()
 	std::cout << actualSize << " - Is the size transmitted across the wire" << std::endl;
 	char* buffer = new char[actualSize];
 
-
 	size_t remainingToReceieve = actualSize;
 
 	char* bufferPos = &buffer[0];
-	//if (len = recvfrom(serverSocket, buffer, sizeof(GibCore::SentStruct), 0, (sockaddr*)&client, &slen) == SOCKET_ERROR)
 	while (remainingToReceieve > 0)
 	{
 		size_t sendSize = remainingToReceieve > UDP_BUF_SIZE ? UDP_BUF_SIZE : remainingToReceieve;
@@ -221,7 +219,7 @@ cv::Mat UDPServer::ReceiveImage()
 	image = cv::imdecode(cv::Mat(vec), 1);
 	return image;
 }
-*/
+
 
 cv::Mat UDPServer::ReceiveImage()
 {

@@ -7,6 +7,14 @@ cv::Mat Rotate::RunFilter(cv::Mat& img, std::vector<std::string>& params)
     {
         cv::rotate(img, newImg, cv::ROTATE_90_CLOCKWISE);
     }
+    else if (params[0] == "180")
+    {
+        cv::rotate(img, newImg, cv::ROTATE_180);
+    }
+    else if (params[0] == "-90" || params[0] == "270")
+    {
+        cv::rotate(img, newImg, cv::ROTATE_90_COUNTERCLOCKWISE);
+    }
     else
         cv::rotate(img, newImg, cv::ROTATE_90_COUNTERCLOCKWISE);
     return newImg;
