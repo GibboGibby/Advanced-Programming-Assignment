@@ -91,8 +91,36 @@ namespace GibCore
 
 	//Factory
 	
-	
+	inline cv::Mat FilterLambda(cv::Mat& img, const std::function <void(cv::Mat& img, int x, int y)>& f)
+	{
+		cv::Mat newImg = img.clone();
+		for (int i = 0; i < newImg.rows; i++)
+		{
+			for (int j = 0; j < newImg.cols; j++)
+			{
+				f(newImg, i, j);
+			}
+		}
+		return newImg;
+	}
+
+	inline cv::Mat FilterLambdaParallel(cv::Mat& img, int startPos, int size, const std::function<void(cv::Mat& img, int x, int y)>& f)
+	{
+		cv::Mat newImg = img.clone();
+		for (int i = startPos; i < startPos + size; i++)
+		{
+			if (i > newImg.cols) continue;
+			for (int j = 0; j < newImg.cols; j++)
+			{
+				f(newImg, i, j);
+			}
+		}
+	}
 }
+
+
+
+
 
 class Filter;
 template<typename T>

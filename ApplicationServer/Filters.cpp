@@ -32,21 +32,38 @@ Greyscale::Greyscale()
 cv::Mat Greyscale::RunFilter(cv::Mat& img, std::vector<std::string>& params)
 {
     //return GrayscaleSingleThreaded(img);
-    auto startSingle = std::chrono::high_resolution_clock::now();
-    GrayscaleSingleThreaded(img);
-    auto stopSingle = std::chrono::high_resolution_clock::now();
-    auto singleDuration = std::chrono::duration_cast<std::chrono::microseconds>(stopSingle - startSingle);
-    auto startMulti = std::chrono::high_resolution_clock::now();
-    cv::Mat grayscaleImg = GrayscaleMultiThreaded(img);
-    auto stopMulti = std::chrono::high_resolution_clock::now();
-    auto multiDuration = std::chrono::duration_cast<std::chrono::microseconds>(stopMulti - startMulti);
-    std::cout << singleDuration.count() << " - duration of single threaded in microseconds" << std::endl;
-    std::cout << multiDuration.count() << " - duration of multi threaded in microseconds" << std::endl;
-    return grayscaleImg;
+    if (params.size() != 0)
+    {
+        return GrayscaleMultiThreaded(img);
+    }
+    if (params[0] == "parallel") return GrayscaleMultiThreaded(img);
+    else if (params[0] == "single") return GrayscaleSingleThreaded(img);
+    else if (params[0] == "testing")
+    {
+        return GibCore::FilterLambda(img, [](cv::Mat& img, int x, int y) {
+            cv::Vec3b pixel = img.at<cv::Vec3b>(x, y);
+            int pixelVal = 0;
+            pixelVal += (int)pixel[0] * 0.114;
+            pixelVal += (int)pixel[1] * 0.587;
+            pixelVal += (int)pixel[2] * 0.299;
+            pixelVal /= 3;
+            pixel[0] = (uchar)pixelVal;
+            pixel[1] = (uchar)pixelVal;
+            pixel[2] = (uchar)pixelVal;
+            img.at<cv::Vec3b>(x, y) = pixel;
+            });
+    }
+    
+    
+    
+
+    
+    
 }
 
 cv::Mat Greyscale::GrayscaleSingleThreaded(cv::Mat& img)
 {
+    auto startSingle = std::chrono::high_resolution_clock::now();
     cv::Mat newImg = img;
     for (int i = 0; i < newImg.rows; i++)
     {
@@ -68,12 +85,17 @@ cv::Mat Greyscale::GrayscaleSingleThreaded(cv::Mat& img)
             newImg.at<cv::Vec3b>(i, j) = pixel;
         }
     }
+
+    auto stopSingle = std::chrono::high_resolution_clock::now();
+    auto singleDuration = std::chrono::duration_cast<std::chrono::microseconds>(stopSingle - startSingle);
+    std::cout << singleDuration.count() << " - duration of single threaded in microseconds" << std::endl;
     //https://support.ptc.com/help/mathcad/r9.0/en/index.html#page/PTC_Mathcad_Help/example_grayscale_and_color_in_images.html
     return newImg;
 }
 
 cv::Mat Greyscale::GrayscaleMultiThreaded(cv::Mat& img)
 {
+    auto startMulti = std::chrono::high_resolution_clock::now();
     cv::Mat newImg = img;
     int size = std::round((double)img.rows / NUM_THREADS);
     std::vector<std::thread> threads;
@@ -87,6 +109,10 @@ cv::Mat Greyscale::GrayscaleMultiThreaded(cv::Mat& img)
     {
         threads[i].join();
     }
+    auto stopMulti = std::chrono::high_resolution_clock::now();
+    auto multiDuration = std::chrono::duration_cast<std::chrono::microseconds>(stopMulti - startMulti);
+    std::cout << multiDuration.count() << " - duration of multi threaded in microseconds" << std::endl;
+
     return newImg;
 }
 
@@ -109,6 +135,8 @@ void Greyscale::GrayscaleThread(cv::Mat& origImg, cv::Mat tempImg, int startPos,
             tempImg.at<cv::Vec3b>(i, j) = pixel;
         }
     }
+
+    
     mutex.lock();
     for (int i = startPos; i < startPos + size; i++)
     {
