@@ -142,7 +142,7 @@ void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size, int port
 
 	bool verified = VerifyImage(image, threadSocket, client);
 	std::cout << "Verified value - " << verified << std::endl;
-	mutex.lock();
+	//mutex.lock();
 
 	//cv::imshow("Thread img", image);
 	//cv::waitKey(0);
@@ -156,6 +156,7 @@ void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size, int port
 	std::string val = std::string(".jpg");
 	SendImage(filteredImage, val, threadSocket, client);
 
+	mutex.lock();
 	closesocket(threadSocket);
 	for (int i = 0; i < usedPorts.size(); i++)
 	{
@@ -220,7 +221,7 @@ cv::Mat UDPServer::ReceiveImage()
 	return image;
 }
 
-
+/*
 cv::Mat UDPServer::ReceiveImage()
 {
 	char sizeBuf[sizeof(size_t)];
@@ -256,6 +257,7 @@ cv::Mat UDPServer::ReceiveImage()
 
 	return image;
 }
+*/
 
 
 GibCore::ImageFilterParams UDPServer::ReceiveFilter()
