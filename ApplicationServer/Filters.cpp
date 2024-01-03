@@ -32,7 +32,7 @@ Greyscale::Greyscale()
 cv::Mat Greyscale::RunFilter(cv::Mat& img, std::vector<std::string>& params)
 {
     //return GrayscaleSingleThreaded(img);
-    if (params.size() != 0)
+    if (params.size() == 0)
     {
         return GrayscaleMultiThreaded(img);
     }
@@ -356,4 +356,45 @@ cv::Mat Sharpening::RunFilter(cv::Mat& img, std::vector<std::string>& params)
     cv::filter2D(img, sharpenedImg, -1, sharpeningKernel);
     //https://answers.opencv.org/question/216383/how-could-do-sharpness-images/
     return sharpenedImg;
+}
+
+cv::Mat BrightnessAdjust::RunFilter(cv::Mat& img, std::vector<std::string>& params)
+{
+    int brightness = stoi(params[0]);
+    return BrightnessAdjustMultithreaded(img, brightness);
+}
+
+cv::Mat BrightnessAdjust::BrightnessAdjustMultithreaded(cv::Mat& img, int brightness)
+{
+    cv::Mat newImg = img.clone();
+    int size = std::round((double)img.rows / NUM_THREADS);
+    auto start = std::chrono::high_resolution_clock::now();
+    std::vector<std::thread> threads;
+    for (int i = 0; i < NUM_THREADS; i++)
+    {
+        //std::thread t1(&BoxBlur::BoxBlurThread, this, std::ref(newImg), newImg, i * size, size, sizeX, sizeY);
+        std::thread t1(&GibCore::FilterLambdaParallel, std::ref(mutex), std::ref(newImg), i * size, size, [brightness](cv::Mat& img, int x, int y) 
+            {
+                cv::Vec3b pixel = img.at<cv::Vec3b>(x, y);
+                int blue = pixel[0] + brightness;
+                int green = pixel[1] + brightness;
+                int red = pixel[2] + brightness;
+                pixel[0] = GibCore::Clamp2(blue, 0, 255);
+                pixel[1] = GibCore::Clamp2(green, 0, 255);
+                pixel[2] = GibCore::Clamp2(red, 0, 255);
+                img.at<cv::Vec3b>(x, y) = pixel;
+            });
+        threads.push_back(std::move(t1));
+    }
+
+    for (int i = 0; i < threads.size(); i++)
+    {
+        threads[i].join();
+    }
+
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "duration of brightness adjust - " << duration.count();
+
+    return newImg;
 }

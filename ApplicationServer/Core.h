@@ -11,6 +11,7 @@
 #define PORT 8888
 
 #define UDP_BUF_SIZE 1357
+#define HASH_ACCEPTABLE_ERROR 2.0
 
 #include "opencv2/core.hpp"
 #include "opencv2/imgcodecs.hpp"
@@ -85,7 +86,8 @@ namespace GibCore
 		{ImageFilter::FLIPPING, 1},
 		{ImageFilter::CROPPING, 2},
 		{ImageFilter::BOXBLUR, 0},
-		{ImageFilter::SHARPENING, 0}
+		{ImageFilter::SHARPENING, 0},
+		{ImageFilter::BRIGHTNESSADJUST, 1}
 	};
 	//extern std::map<ImageFilter, >
 
@@ -104,7 +106,7 @@ namespace GibCore
 		return newImg;
 	}
 
-	inline cv::Mat FilterLambdaParallel(cv::Mat& img, int startPos, int size, const std::function<void(cv::Mat& img, int x, int y)>& f)
+	inline cv::Mat FilterLambdaParallel(std::mutex& mutex, cv::Mat& img, int startPos, int size, const std::function<void(cv::Mat& img, int x, int y)>& f)
 	{
 		cv::Mat newImg = img.clone();
 		for (int i = startPos; i < startPos + size; i++)
@@ -115,6 +117,38 @@ namespace GibCore
 				f(newImg, i, j);
 			}
 		}
+		mutex.lock();
+		for (int i = startPos; i < startPos + size; i++)
+		{
+			for (int j = 0; j < newImg.cols; j++)
+			{
+				img.at<cv::Vec3b>(i, j) = newImg.at<cv::Vec3b>(i, j);
+			}
+		}
+		mutex.unlock();
+
+		return img;
+	}
+	inline uchar Clamp2(int pixelCol, int minVal, int maxVal)
+	{
+		if (pixelCol > maxVal)
+		{
+			return (uchar)maxVal;
+		}
+		else if (pixelCol < minVal)
+		{
+			return (uchar)minVal;
+		}
+		else
+		{
+			return (uchar)pixelCol;
+		}
+	}
+	
+	inline bool DoubleCloseEnough(double val1, double val2, double error)
+	{
+		if (val1 < val2 + error && val1 > val2 - error) return true;
+		else return false;
 	}
 }
 

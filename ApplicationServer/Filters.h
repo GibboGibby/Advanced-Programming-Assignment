@@ -53,3 +53,12 @@ class Sharpening : public Filter
 {
 	cv::Mat RunFilter(cv::Mat& img, std::vector<std::string>& params);
 };
+
+class BrightnessAdjust : public Filter
+{
+private:
+	std::mutex mutex;
+public:
+	cv::Mat RunFilter(cv::Mat& img, std::vector<std::string>& params);
+	cv::Mat BrightnessAdjustMultithreaded(cv::Mat& img, int brightness);
+};

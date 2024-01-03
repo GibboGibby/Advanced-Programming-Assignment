@@ -337,12 +337,12 @@ bool UDPServer::VerifyImage(cv::Mat& img, SOCKET& threadSocket, sockaddr_in clie
 	recvfrom(threadSocket, buf, sizeof(double), 0, (sockaddr*)&newClient, &slen);
 	double otherHash = 0;
 	memcpy(&otherHash, buf, sizeof(double));
-	bool isHash = hash == otherHash;
+	bool isHash = GibCore::DoubleCloseEnough(hash, otherHash, HASH_ACCEPTABLE_ERROR);
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	mutex.lock();
 	sendto(threadSocket, (char*) & isHash, sizeof(char), 0, (sockaddr*)&client, slen);
 	mutex.unlock();
-	return hash == otherHash;
+	return isHash;
 }
 
 GibCore::ImageFilterParams UDPServer::ReceieveFilter(SOCKET& threadSocket)
@@ -399,7 +399,7 @@ void UDPServer::SendImage(cv::Mat& img, std::string& ext, SOCKET& threadSocket, 
 		remainingToSend -= sendSize;
 		from += sendSize;
 		std::cout << remainingToSend << " - What is left to send" << std::endl;
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		//std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 
 
@@ -435,5 +435,7 @@ Filter* UDPServer::GetFilterFromEnum(GibCore::ImageFilter filter)
 		return CreateFilter<BoxBlur>();
 	case GibCore::ImageFilter::SHARPENING:
 		return CreateFilter<Sharpening>();
+	case GibCore::ImageFilter::BRIGHTNESSADJUST:
+		return CreateFilter<BrightnessAdjust>();
 	}
 }

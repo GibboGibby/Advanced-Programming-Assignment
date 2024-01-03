@@ -90,7 +90,7 @@ void UDPClient::SendImage(cv::Mat& img, std::string extension)
 		remainingToSend -= sendSize;
 		from += sendSize;
 		std::cout << remainingToSend << " - What is left to send" << std::endl;
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		//std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	
 	bool verified = VerifyImage(img, clientSocket, tempServer);
