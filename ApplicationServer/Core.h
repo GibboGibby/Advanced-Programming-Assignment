@@ -87,7 +87,8 @@ namespace GibCore
 		{ImageFilter::CROPPING, 2},
 		{ImageFilter::BOXBLUR, 0},
 		{ImageFilter::SHARPENING, 0},
-		{ImageFilter::BRIGHTNESSADJUST, 1}
+		{ImageFilter::BRIGHTNESSADJUST, 1},
+		{ImageFilter::GAMMACORRECTION, 1}
 	};
 	//extern std::map<ImageFilter, >
 
@@ -129,6 +130,24 @@ namespace GibCore
 
 		return img;
 	}
+
+	inline cv::Mat MultithreadedImageProcessing(std::mutex& mutex, cv::Mat& img, int threadCount, const std::function<void(cv::Mat& img, int x, int y)>& f)
+	{
+		cv::Mat newImg = img.clone();
+		int size = std::round((double)img.rows / threadCount);
+		std::vector<std::thread> threads;
+		for (int i = 0; i < threadCount; i++)
+		{
+			std::thread t1(&GibCore::FilterLambdaParallel, std::ref(mutex), std::ref(newImg), i * size, size, f);
+			threads.emplace_back(std::move(t1));
+		}
+		for (int i = 0; i < threadCount; i++)
+		{
+			threads[i].join();
+		}
+		return newImg;
+	}
+
 	inline uchar Clamp2(int pixelCol, int minVal, int maxVal)
 	{
 		if (pixelCol > maxVal)

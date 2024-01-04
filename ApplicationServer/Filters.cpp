@@ -96,19 +96,19 @@ cv::Mat Greyscale::GrayscaleSingleThreaded(cv::Mat& img)
 cv::Mat Greyscale::GrayscaleMultiThreaded(cv::Mat& img)
 {
     auto startMulti = std::chrono::high_resolution_clock::now();
-    cv::Mat newImg = img;
-    int size = std::round((double)img.rows / NUM_THREADS);
-    std::vector<std::thread> threads;
-    for (int i = 0; i < NUM_THREADS; i++)
-    {
-        std::thread t1(&Greyscale::GrayscaleThread, this, std::ref(newImg), newImg, i * size, size);
-        threads.push_back(std::move(t1));
-    }
+    cv::Mat newImg = GibCore::MultithreadedImageProcessing(mutex, img, NUM_THREADS, [](cv::Mat& img, int x, int y) {
+            cv::Vec3b pixel = img.at<cv::Vec3b>(x, y);
+            int pixelVal = 0;
+            pixelVal += (int)pixel[0] * 0.114;
+            pixelVal += (int)pixel[1] * 0.587;
+            pixelVal += (int)pixel[2] * 0.299;
+            pixelVal /= 3;
+            pixel[0] = (uchar)pixelVal;
+            pixel[1] = (uchar)pixelVal;
+            pixel[2] = (uchar)pixelVal;
+            img.at<cv::Vec3b>(x, y) = pixel;
+        });
 
-    for (int i = 0; i < threads.size(); i++)
-    {
-        threads[i].join();
-    }
     auto stopMulti = std::chrono::high_resolution_clock::now();
     auto multiDuration = std::chrono::duration_cast<std::chrono::microseconds>(stopMulti - startMulti);
     std::cout << multiDuration.count() << " - duration of multi threaded in microseconds" << std::endl;
@@ -366,35 +366,39 @@ cv::Mat BrightnessAdjust::RunFilter(cv::Mat& img, std::vector<std::string>& para
 
 cv::Mat BrightnessAdjust::BrightnessAdjustMultithreaded(cv::Mat& img, int brightness)
 {
-    cv::Mat newImg = img.clone();
-    int size = std::round((double)img.rows / NUM_THREADS);
     auto start = std::chrono::high_resolution_clock::now();
-    std::vector<std::thread> threads;
-    for (int i = 0; i < NUM_THREADS; i++)
-    {
-        //std::thread t1(&BoxBlur::BoxBlurThread, this, std::ref(newImg), newImg, i * size, size, sizeX, sizeY);
-        std::thread t1(&GibCore::FilterLambdaParallel, std::ref(mutex), std::ref(newImg), i * size, size, [brightness](cv::Mat& img, int x, int y) 
-            {
-                cv::Vec3b pixel = img.at<cv::Vec3b>(x, y);
-                int blue = pixel[0] + brightness;
-                int green = pixel[1] + brightness;
-                int red = pixel[2] + brightness;
-                pixel[0] = GibCore::Clamp2(blue, 0, 255);
-                pixel[1] = GibCore::Clamp2(green, 0, 255);
-                pixel[2] = GibCore::Clamp2(red, 0, 255);
-                img.at<cv::Vec3b>(x, y) = pixel;
-            });
-        threads.push_back(std::move(t1));
-    }
-
-    for (int i = 0; i < threads.size(); i++)
-    {
-        threads[i].join();
-    }
+    cv::Mat newImg = GibCore::MultithreadedImageProcessing(mutex, img, NUM_THREADS, [brightness](cv::Mat& img, int x, int y) {
+            cv::Vec3b pixel = img.at<cv::Vec3b>(x, y);
+            int blue = pixel[0] + brightness;
+            int green = pixel[1] + brightness;
+            int red = pixel[2] + brightness;
+            pixel[0] = GibCore::Clamp2(blue, 0, 255);
+            pixel[1] = GibCore::Clamp2(green, 0, 255);
+            pixel[2] = GibCore::Clamp2(red, 0, 255);
+            img.at<cv::Vec3b>(x, y) = pixel;
+        });
 
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     std::cout << "duration of brightness adjust - " << duration.count();
 
+    return newImg;
+}
+
+cv::Mat GammaCorrection::RunFilter(cv::Mat& img, std::vector<std::string>& params)
+{
+    double gamma = std::stod(params[0]);
+    std::cout << "This is the gamme value - " << gamma << std::endl;
+    cv::Mat newImg = GibCore::MultithreadedImageProcessing(mutex, img, NUM_THREADS, [gamma](cv::Mat& img, int x, int y) {
+        double gammaCorrection = 1 / gamma;
+        cv::Vec3b pixel = img.at<cv::Vec3b>(x, y);
+        double blue = (double)pixel[0] / 255;
+        double green = (double)pixel[1] / 255;
+        double red = (double)pixel[2] / 255;
+        pixel[0] = (uchar)(255 * std::pow(blue, gammaCorrection));
+        pixel[1] = (uchar)(255 * std::pow(green, gammaCorrection));;
+        pixel[2] = (uchar)(255 * std::pow(red, gammaCorrection));;
+        img.at<cv::Vec3b>(x, y) = pixel;
+        });
     return newImg;
 }

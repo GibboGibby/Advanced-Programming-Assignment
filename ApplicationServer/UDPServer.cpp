@@ -437,5 +437,7 @@ Filter* UDPServer::GetFilterFromEnum(GibCore::ImageFilter filter)
 		return CreateFilter<Sharpening>();
 	case GibCore::ImageFilter::BRIGHTNESSADJUST:
 		return CreateFilter<BrightnessAdjust>();
+	case GibCore::ImageFilter::GAMMACORRECTION:
+		return CreateFilter<GammaCorrection>();
 	}
 }

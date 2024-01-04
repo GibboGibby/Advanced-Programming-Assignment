@@ -62,3 +62,11 @@ public:
 	cv::Mat RunFilter(cv::Mat& img, std::vector<std::string>& params);
 	cv::Mat BrightnessAdjustMultithreaded(cv::Mat& img, int brightness);
 };
+
+class GammaCorrection : public Filter
+{
+private:
+	std::mutex mutex;
+public:
+	cv::Mat RunFilter(cv::Mat& img, std::vector<std::string>& params);
+};
