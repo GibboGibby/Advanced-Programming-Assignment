@@ -400,5 +400,28 @@ cv::Mat GammaCorrection::RunFilter(cv::Mat& img, std::vector<std::string>& param
         pixel[2] = (uchar)(255 * std::pow(red, gammaCorrection));;
         img.at<cv::Vec3b>(x, y) = pixel;
         });
+    //https://www.dfstudios.co.uk/articles/programming/image-programming-algorithms/image-processing-algorithms-part-6-gamma-correction/
     return newImg;
+}
+
+cv::Mat ContrastAdjust::RunFilter(cv::Mat& img, std::vector<std::string>& params)
+{
+    int contrast = stoi(params[0]);
+    int factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+    cv::Mat newImg = GibCore::MultithreadedImageProcessing(mutex, img, NUM_THREADS, [factor](cv::Mat& img, int x, int y) 
+        {
+            cv::Vec3b pixel = img.at<cv::Vec3b>(x, y);
+            int blue = pixel[0];
+            int green = pixel[1];
+            int red = pixel[2];
+            blue = factor * (blue - 128) + 128;
+            green = factor * (green - 128) + 128;
+            red = factor * (red - 128) + 128;
+            pixel[0] = GibCore::Clamp2(blue, 0, 255);
+            pixel[1] = GibCore::Clamp2(green, 0, 255);
+            pixel[2] = GibCore::Clamp2(red, 0, 255);
+            img.at<cv::Vec3b>(x, y) = pixel;
+        });
+    //https://www.dfstudios.co.uk/articles/programming/image-programming-algorithms/image-processing-algorithms-part-5-contrast-adjustment/
+    return newImg;  
 }

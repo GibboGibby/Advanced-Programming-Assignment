@@ -70,3 +70,11 @@ private:
 public:
 	cv::Mat RunFilter(cv::Mat& img, std::vector<std::string>& params);
 };
+
+class ContrastAdjust : public Filter
+{
+private:
+	std::mutex mutex;
+public:
+	cv::Mat RunFilter(cv::Mat& img, std::vector<std::string>& params);
+};

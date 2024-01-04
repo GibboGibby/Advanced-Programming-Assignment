@@ -88,7 +88,8 @@ namespace GibCore
 		{ImageFilter::BOXBLUR, 0},
 		{ImageFilter::SHARPENING, 0},
 		{ImageFilter::BRIGHTNESSADJUST, 1},
-		{ImageFilter::GAMMACORRECTION, 1}
+		{ImageFilter::GAMMACORRECTION, 1},
+		{ImageFilter::CONTRASTADJUST, 1}
 	};
 	//extern std::map<ImageFilter, >
 
