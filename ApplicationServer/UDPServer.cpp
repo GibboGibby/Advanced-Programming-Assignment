@@ -62,21 +62,21 @@ void UDPServer::ReceiveImageParallel()
 {
 	sockaddr_in newClient;
 	char sizeBuf[sizeof(size_t)];
-	/*
-	recvfrom(serverSocket, sizeBuf, sizeof(size_t), MSG_PEEK, (sockaddr*)&newClient, &slen);
-	if (CheckClients(newClient)) {
-		//std::cout << "Client already in the system\n";
-		return;
-	}
-	*/
-	//std::cout << "Sizebuf (before second recv) - " << sizeBuf << std::endl;
+
 	recvfrom(serverSocket, sizeBuf, sizeof(size_t), 0, (sockaddr*)&newClient, &slen);
-	//std::cout << "Sizebuf (after second recv) - " << sizeBuf << std::endl;
+	int confirmation = 1;
+	if (clients.size() >= SERVER_THREADS)
+	{
+		confirmation = 0;
+		std::cout << "Too many clients currently connecting. refusing connection";
+	}
+	sendto(serverSocket, (char*)&confirmation, sizeof(int), 0, (sockaddr*)&newClient, slen);
+	if (confirmation == 0) return;
 	AddToClients(newClient);
 	size_t actualSize;
 	memcpy(&actualSize, sizeBuf, sizeof(size_t));
 	int port = usedPorts[usedPorts.size() - 1] + 1;
-	//std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	
 	std::cout << "Now sending info back" << std::endl;
 
 	usedPorts.push_back(port);
@@ -92,8 +92,9 @@ void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size, int port
 	//std::cout << GetCurrentThreadId() << " - " << client.sin_addr.S_un.S_addr << std::endl;
 	std::cout << "\nCreating new thread on port - "<< port << std::endl;
 	mutex.lock();
-	sendto(serverSocket, (const char*)&port, sizeof(int), 0, (sockaddr*)&client, slen);
+	//threadIDs.push_back(std::this_thread::get_id());
 	mutex.unlock();
+	sendto(serverSocket, (const char*)&port, sizeof(int), 0, (sockaddr*)&client, slen);
 	SOCKET threadSocket;
 	threadSocket = socket(AF_INET, SOCK_DGRAM, 0);
 	int optval = 1;
@@ -106,6 +107,7 @@ void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size, int port
 	if (bind(threadSocket, (sockaddr*)&threadServer, sizeof(threadServer)) == SOCKET_ERROR)
 	{
 		std::cout << "Error binding another socket. error code - " << WSAGetLastError() << std::endl;
+		TerminateThread(threadSocket, port);
 		return;
 	}
 	std::cout << "Server bound successfully\n";
@@ -142,48 +144,22 @@ void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size, int port
 
 	bool verified = VerifyImage(image, threadSocket, client);
 	std::cout << "Verified value - " << verified << std::endl;
-	//mutex.lock();
-
-	//cv::imshow("Thread img", image);
-	//cv::waitKey(0);
-	//cv::destroyWindow("Thread img");
+	if (verified == 0)
+	{
+		std::cout << "Image has not been recieved properly. Please try again" << std::endl;
+		TerminateThread(threadSocket, port);
+		return;
+	}
 
 	GibCore::ImageFilterParams params = ReceieveFilter(threadSocket);
 	cv::Mat filteredImage = FilterImage(image, params);
-	//cv::imshow("Thread img", filteredImage);
-	//cv::waitKey(0);
-	//cv::destroyWindow("Thread img");
+
 	std::string val = std::string(".jpg");
 	SendImage(filteredImage, val, threadSocket, client);
 
-	mutex.lock();
-	closesocket(threadSocket);
-	for (int i = 0; i < usedPorts.size(); i++)
-	{
-		if (usedPorts[i] == port)
-		{
-			usedPorts.erase(usedPorts.begin() + i);
-			break;
-		}
-	}
-	mutex.unlock();
-
-	//Filter* filterToUse = CreateFilter<Rotate>();
-	//filterToUse->SetImage();
-
-	/*
-	mutex.lock();
-	RemoveFromClients(client);
-	for (int i = 0; i < threadIDs.size(); i++)
-	{
-		if (threadIDs[i] == std::this_thread::get_id())
-		{
-			threadIDs.erase(threadIDs.begin() + i);
-			break;
-		}
-	}
-	mutex.unlock();
-	*/
+	
+	//RemoveThread(std::this_thread::get_id());
+	TerminateThread(threadSocket, port);
 }
 //https://stackoverflow.com/questions/54155900/udp-server-and-connected-sockets
 // For connect which should filter the packets. need to test on dans pc
@@ -221,45 +197,6 @@ cv::Mat UDPServer::ReceiveImage()
 	return image;
 }
 
-/*
-cv::Mat UDPServer::ReceiveImage()
-{
-	char sizeBuf[sizeof(size_t)];
-
-	recvfrom(serverSocket, sizeBuf, sizeof(size_t), 0, (sockaddr*)&client, &slen);
-	size_t actualSize;
-	memcpy(&actualSize, sizeBuf, sizeof(size_t));
-	char* buffer = new char[actualSize];
-
-	std::cout << actualSize << " - Is the size transmitted across the wire" << std::endl;
-	
-	size_t remainingToReceieve = actualSize;
-
-	char* bufferPos = &buffer[0];
-	//if (len = recvfrom(serverSocket, buffer, sizeof(GibCore::SentStruct), 0, (sockaddr*)&client, &slen) == SOCKET_ERROR)
-	while (remainingToReceieve > 0)
-	{
-		size_t sendSize = remainingToReceieve > UDP_BUF_SIZE ? UDP_BUF_SIZE : remainingToReceieve;
-		while (recvfrom(serverSocket, (char*)bufferPos, UDP_BUF_SIZE, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR)
-		{
-			printf("RecvFrom Failed!\nThis reason: %i\n", WSAGetLastError());
-			printf("But this is being retried\n");
-		}
-		remainingToReceieve -= sendSize;
-		bufferPos += sendSize;
-		std::cout << "This is the amount received - " << remainingToReceieve << std::endl;
-	}
-	cv::Mat image;
-	std::vector<uchar> vec;
-	vec.assign(buffer, buffer + actualSize);
-	delete[] buffer;
-	image = cv::imdecode(cv::Mat(vec), 1);
-
-	return image;
-}
-*/
-
-
 GibCore::ImageFilterParams UDPServer::ReceiveFilter()
 {
 	GibCore::ImageFilterParams filterInfo;
@@ -294,6 +231,13 @@ void UDPServer::RemoveFromClients(sockaddr_in client)
 			return;
 		}
 	}
+}
+
+void UDPServer::TerminateThread(SOCKET& socket, int& port)
+{
+	closesocket(socket);
+	RemovePort(port);
+	RemoveFromClients(client);
 }
 
 std::string UDPServer::GetEnumFilterName(GibCore::ImageFilter filter)
@@ -441,5 +385,32 @@ Filter* UDPServer::GetFilterFromEnum(GibCore::ImageFilter filter)
 		return CreateFilter<GammaCorrection>();
 	case GibCore::ImageFilter::CONTRASTADJUST:
 		return CreateFilter<ContrastAdjust>();
+	}
+}
+
+void UDPServer::RemovePort(int port)
+{
+	mutex.lock();
+	for (int i = 0; i < usedPorts.size(); i++)
+	{
+		if (usedPorts[i] == port)
+		{
+			usedPorts.erase(usedPorts.begin() + i);
+			break;
+		}
+	}
+	mutex.unlock();
+}
+
+void UDPServer::RemoveThread(std::thread::id id)
+{
+	mutex.lock();
+	for (int i = 0; i < threadIDs.size(); i++)
+	{
+		if (threadIDs[i] == id)
+		{
+			threadIDs.erase(threadIDs.begin() + i);
+			break;
+		}
 	}
 }

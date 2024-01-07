@@ -31,4 +31,15 @@ public:
 
 	GibCore::ImageFilter FilterFromString(std::string);
 
+private:
+	void ExitProgram(std::string extra = "")
+	{
+		if (extra == "")
+			std::cout << "A problem has occured program will now terminate" << std::endl;
+		else
+			std::cout << "Error: " << extra << " - Program will now Terminate" << std::endl;
+		WSACleanup();
+		closesocket(clientSocket);
+		exit(EXIT_FAILURE);
+	}
 };

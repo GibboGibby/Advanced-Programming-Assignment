@@ -22,6 +22,11 @@ bool UDPClient::CreateSocket()
 	{
 		return false;
 	}
+	u_long blockMode = 0;
+	if (ioctlsocket(clientSocket, FIONBIO, &blockMode) == SOCKET_ERROR)
+	{
+		return false;
+	}
 	return true;
 }
 
@@ -54,16 +59,33 @@ void UDPClient::SendImage(cv::Mat& img, std::string extension)
 	if (sendto(clientSocket, sizeButChar, bufSize, 0, (sockaddr*)&server, sizeof(sockaddr_in)) == SOCKET_ERROR)
 	{
 		std::cout << "Sendto error on sending size. Error code: " << WSAGetLastError() << std::endl;
+		ExitProgram("Problem sending image");
 	}
-	char portChar[sizeof(int)];
+	char verificationChar[sizeof(int)];
+	int verification;
 	sockaddr_in fromSock;
 	int slen = sizeof(sockaddr_in);
+	if (recvfrom(clientSocket, (char*)verificationChar, sizeof(int), 0, (sockaddr*)&fromSock, &slen) == SOCKET_ERROR)
+	{
+		std::cout << "Recvfrom error. Error code: " << WSAGetLastError() << std::endl;
+		ExitProgram("Server connection reset");
+	}
+	memcpy(&verification, &verificationChar, sizeof(int));
+	if (verification == 0)
+	{
+		ExitProgram("Too many clients connected to the server. Please try again later");
+	}
+
+	char portChar[sizeof(int)];
+	
 	std::cout << "recieving\n";
 	std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
 	
-	if ((recvfrom(clientSocket, portChar, sizeof(int), 0, (sockaddr*)&fromSock, &slen)) == SOCKET_ERROR)
+	if (recvfrom(clientSocket, portChar, sizeof(int), 0, (sockaddr*)&fromSock, &slen) == SOCKET_ERROR)
 	{
-		std::cout << "Recvfrom error on getting port. Error code: " << WSAGetLastError() << std::endl;
+		std::cout << "Recvfrom error. Error code: " << WSAGetLastError() << std::endl;
+		ExitProgram("Server connection reset");
 	}
 	//mutex.unlock();
 	int port;

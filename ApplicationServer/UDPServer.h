@@ -4,6 +4,8 @@
 #include <mutex>
 #include "Filters.h"
 
+#define SERVER_THREADS 4
+
 class UDPServer
 {
 private:
@@ -26,9 +28,7 @@ public:
 	void ReceivingAndProcessing(sockaddr_in client, size_t size, int port);
 	GibCore::ImageFilterParams ReceiveFilter();
 
-	void AddToClients(sockaddr_in client);
-	bool CheckClients(sockaddr_in client);
-	void RemoveFromClients(sockaddr_in client);
+	
 
 	std::string GetEnumFilterName(GibCore::ImageFilter filter);
 
@@ -45,5 +45,14 @@ public:
 
 private:
 	Filter* GetFilterFromEnum(GibCore::ImageFilter filter);
+
+	void RemovePort(int port);
+	void RemoveThread(std::thread::id id);
+
+	void AddToClients(sockaddr_in client);
+	bool CheckClients(sockaddr_in client);
+	void RemoveFromClients(sockaddr_in client);
+
+	void TerminateThread(SOCKET& socket, int& port);
 };
 
