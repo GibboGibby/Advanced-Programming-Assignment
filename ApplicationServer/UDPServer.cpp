@@ -88,7 +88,6 @@ void UDPServer::ReceiveImageParallel()
 
 void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size, int port)
 {
-
 	//std::cout << GetCurrentThreadId() << " - " << client.sin_addr.S_un.S_addr << std::endl;
 	std::cout << "\nCreating new thread on port - "<< port << std::endl;
 	mutex.lock();

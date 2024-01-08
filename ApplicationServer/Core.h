@@ -81,7 +81,6 @@ namespace GibCore
 	const std::map<ImageFilter, int> ImageFilterParamsSize = {
 		{ImageFilter::RESIZE, 2},
 		{ImageFilter::ROTATION, 1},
-		//{ImageFilter::BOXBLUR, 2},
 		{ImageFilter::TOGREYSCALE, 0},
 		{ImageFilter::FLIPPING, 1},
 		{ImageFilter::CROPPING, 2},
