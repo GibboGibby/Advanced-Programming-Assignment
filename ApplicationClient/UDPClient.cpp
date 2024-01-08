@@ -42,7 +42,9 @@ bool UDPClient::LoadImageFromPath(std::string path, cv::Mat& img, std::string& e
 	}
 	std::cout << extension<< std::endl;
 	if (!fstream.good()) return false;
-	img = cv::imread(path);	
+	img = cv::imread(path);
+	if (img.empty()) return false;
+	return true;
 }
 
 
