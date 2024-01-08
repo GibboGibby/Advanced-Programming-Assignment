@@ -133,7 +133,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Filter.cpp" />
     <ClCompile Include="Filters.cpp" />
     <ClCompile Include="server.cpp" />
     <ClCompile Include="UDPServer.cpp" />
