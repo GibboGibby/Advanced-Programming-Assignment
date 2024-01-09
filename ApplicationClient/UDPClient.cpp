@@ -101,7 +101,7 @@ void UDPClient::SendImage(cv::Mat& img, std::string extension)
 
 	size_t remainingToSend = buf.size();
 	uchar* from = &buf[0];
-	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	while (remainingToSend > 0)
 	{
 		size_t sendSize = remainingToSend > UDP_BUF_SIZE ? UDP_BUF_SIZE : remainingToSend;
