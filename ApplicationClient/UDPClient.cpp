@@ -85,7 +85,7 @@ void UDPClient::SendImage(cv::Mat& img, std::string extension)
 	char portChar[sizeof(int)];
 	
 	std::cout << "recieving\n";
-	std::this_thread::sleep_for(std::chrono::milliseconds(50));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
 	
 	if (recvfrom(clientSocket, portChar, sizeof(int), 0, (sockaddr*)&fromSock, &slen) == SOCKET_ERROR)
