@@ -35,14 +35,20 @@ bool UDPClient::LoadImageFromPath(std::string path, cv::Mat& img, std::string& e
 	// Checks if file exists and then loads the 
 	std::cout << "img path - " << path << std::endl;
 	std::ifstream fstream(path.c_str());
+	size_t pos = path.find(".");
+	extension = path.substr(pos);
+	/*
 	int ext = strlen(path.c_str());
 	for (int i = ext - 4; i < ext; i++)
 	{
 		extension += path[i];
 	}
+	*/
 	std::cout << extension<< std::endl;
 	if (!fstream.good()) return false;
-	img = cv::imread(path);	
+	img = cv::imread(path);
+	if (img.empty()) return false;
+	return true;
 }
 
 
