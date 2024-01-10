@@ -65,7 +65,7 @@ void UDPServer::ReceiveImageParallel()
 
 	recvfrom(serverSocket, sizeBuf, sizeof(size_t), 0, (sockaddr*)&newClient, &slen);
 	int confirmation = 1;
-	if (clients.size() >= SERVER_THREADS)
+	if (usedPorts.size() - 1 >= SERVER_THREADS)
 	{
 		confirmation = 0;
 		std::cout << "Too many clients currently connecting. refusing connection";
