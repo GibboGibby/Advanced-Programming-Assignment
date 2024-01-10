@@ -70,6 +70,7 @@ namespace GibCore
 	{
 		ImageFilter filter;
 		char params[1024];
+		char ext[4];
 	};
 
 	/*

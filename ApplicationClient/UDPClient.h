@@ -8,10 +8,10 @@
 class UDPClient
 {
 private:
-	SOCKET clientSocket;
-	sockaddr_in server;
-	WSAData wsaData;
-	std::mutex mutex;
+	SOCKET _clientSocket;
+	sockaddr_in _server;
+	WSAData _wsaData;
+	std::mutex _mutex;
 
 public:
 	bool Init(int port = 8888, std::string ip = "127.0.0.1");
@@ -25,7 +25,7 @@ public:
 
 	void SaveImage(cv::Mat& img, std::string name);
 
-	SOCKET& GetSocket() { return clientSocket; }
+	SOCKET& GetSocket() { return _clientSocket; }
 
 	void CloseAndCleanup();
 
@@ -39,7 +39,7 @@ private:
 		else
 			std::cout << "Error: " << extra << " - Program will now Terminate" << std::endl;
 		WSACleanup();
-		closesocket(clientSocket);
+		closesocket(_clientSocket);
 		exit(EXIT_FAILURE);
 	}
 };

@@ -86,6 +86,12 @@ int main(int argc, char* argv[])
 		std::cout << "Failed to load image" << std::endl;
 		return 1; 
 	}
+	for (int i = 0; i < 4; i++)
+	{
+		param.ext[i] = extension[i];
+	}
+
+	std::cout << param.ext << " - ext" << std::endl;
 
 	// Send image object using udp
 	std::cout << "Sending image!" << std::endl;

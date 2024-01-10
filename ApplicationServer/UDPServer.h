@@ -9,15 +9,15 @@
 class UDPServer
 {
 private:
-	SOCKET serverSocket;
-	sockaddr_in server, client;
-	WSAData wsaData;
-	std::mutex mutex;
-	int slen = sizeof(sockaddr_in);
-	std::vector<std::thread::id> threadIDs;
-	std::vector<ULONG> clients;
-	std::vector<int> usedPorts;
-	int randomVal = 0;
+	SOCKET _serverSocket;
+	sockaddr_in _server, _client;
+	WSAData _wsaData;
+	std::mutex _mutex;
+	int _slen = sizeof(sockaddr_in);
+	std::vector<std::thread::id> _threadIDs;
+	std::vector<ULONG> _clients;
+	std::vector<int> _usedPorts;
+	
 public:
 	bool Init();
 	bool CreateSocket();
@@ -54,5 +54,6 @@ private:
 	void RemoveFromClients(sockaddr_in client);
 
 	void TerminateThread(SOCKET& socket, int& port);
+	std::vector<std::string> GetVectorOfString(GibCore::ImageFilterParams);
 };
 

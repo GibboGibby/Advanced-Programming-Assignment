@@ -134,6 +134,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Filters.cpp" />
+    <ClCompile Include="GibExceptions.cpp" />
     <ClCompile Include="server.cpp" />
     <ClCompile Include="UDPServer.cpp" />
   </ItemGroup>
@@ -141,6 +142,7 @@
     <ClInclude Include="Core.h" />
     <ClInclude Include="Filter.h" />
     <ClInclude Include="Filters.h" />
+    <ClInclude Include="GibExceptions.h" />
     <ClInclude Include="UDPServer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

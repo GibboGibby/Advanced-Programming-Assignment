@@ -2,28 +2,28 @@
 
 bool UDPClient::Init(int port, std::string ip)
 {
-	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+	if (WSAStartup(MAKEWORD(2, 2), &_wsaData) != 0)
 	{
 		return false;
 	}
 
-	memset((char*)&server, 0, sizeof(server));
+	memset((char*)&_server, 0, sizeof(_server));
 
-	server.sin_family = AF_INET;
-	server.sin_port = htons(port);
-	server.sin_addr.s_addr = inet_addr(ip.c_str());
+	_server.sin_family = AF_INET;
+	_server.sin_port = htons(port);
+	_server.sin_addr.s_addr = inet_addr(ip.c_str());
 
 	return true;
 }
 
 bool UDPClient::CreateSocket()
 {
-	if ((clientSocket = socket(AF_INET, SOCK_DGRAM, 0)) == SOCKET_ERROR)
+	if ((_clientSocket = socket(AF_INET, SOCK_DGRAM, 0)) == SOCKET_ERROR)
 	{
 		return false;
 	}
 	u_long blockMode = 0;
-	if (ioctlsocket(clientSocket, FIONBIO, &blockMode) == SOCKET_ERROR)
+	if (ioctlsocket(_clientSocket, FIONBIO, &blockMode) == SOCKET_ERROR)
 	{
 		return false;
 	}
@@ -35,8 +35,19 @@ bool UDPClient::LoadImageFromPath(std::string path, cv::Mat& img, std::string& e
 	// Checks if file exists and then loads the 
 	std::cout << "img path - " << path << std::endl;
 	std::ifstream fstream(path.c_str());
-	size_t pos = path.find(".");
-	extension = path.substr(pos);
+	//size_t pos = path.find(".");
+	//extension = path.substr(pos);
+
+	std::string tempExt = "";
+	
+	for (int i = strlen(path.c_str()); i > 0; i--)
+	{
+		tempExt += path[i];
+		if (path[i] == '.') break;
+	}
+	std::reverse(tempExt.begin(), tempExt.end());
+	extension = tempExt;
+	std::cout << extension << " - new ext" << std::endl;
 	/*
 	int ext = strlen(path.c_str());
 	for (int i = ext - 4; i < ext; i++)
@@ -62,7 +73,7 @@ void UDPClient::SendImage(cv::Mat& img, std::string extension)
 	memcpy(sizeButChar, &val, sizeof(size_t));
 	int bufSize = sizeof(size_t);
 	//mutex.lock();
-	if (sendto(clientSocket, sizeButChar, bufSize, 0, (sockaddr*)&server, sizeof(sockaddr_in)) == SOCKET_ERROR)
+	if (sendto(_clientSocket, sizeButChar, bufSize, 0, (sockaddr*)&_server, sizeof(sockaddr_in)) == SOCKET_ERROR)
 	{
 		std::cout << "Sendto error on sending size. Error code: " << WSAGetLastError() << std::endl;
 		ExitProgram("Problem sending image");
@@ -71,7 +82,7 @@ void UDPClient::SendImage(cv::Mat& img, std::string extension)
 	int verification;
 	sockaddr_in fromSock;
 	int slen = sizeof(sockaddr_in);
-	if (recvfrom(clientSocket, (char*)verificationChar, sizeof(int), 0, (sockaddr*)&fromSock, &slen) == SOCKET_ERROR)
+	if (recvfrom(_clientSocket, (char*)verificationChar, sizeof(int), 0, (sockaddr*)&fromSock, &slen) == SOCKET_ERROR)
 	{
 		std::cout << "Recvfrom error. Error code: " << WSAGetLastError() << std::endl;
 		ExitProgram("Server connection reset");
@@ -88,7 +99,7 @@ void UDPClient::SendImage(cv::Mat& img, std::string extension)
 	//std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
 	
-	if (recvfrom(clientSocket, portChar, sizeof(int), 0, (sockaddr*)&fromSock, &slen) == SOCKET_ERROR)
+	if (recvfrom(_clientSocket, portChar, sizeof(int), 0, (sockaddr*)&fromSock, &slen) == SOCKET_ERROR)
 	{
 		std::cout << "Recvfrom error. Error code: " << WSAGetLastError() << std::endl;
 		ExitProgram("Server connection reset");
@@ -102,8 +113,8 @@ void UDPClient::SendImage(cv::Mat& img, std::string extension)
 
 	tempServer.sin_family = AF_INET;
 	tempServer.sin_port = htons(port);
-	tempServer.sin_addr.s_addr = server.sin_addr.s_addr;
-	server.sin_port = htons(port);
+	tempServer.sin_addr.s_addr = _server.sin_addr.s_addr;
+	_server.sin_port = htons(port);
 
 	size_t remainingToSend = buf.size();
 	uchar* from = &buf[0];
@@ -111,7 +122,7 @@ void UDPClient::SendImage(cv::Mat& img, std::string extension)
 	while (remainingToSend > 0)
 	{
 		size_t sendSize = remainingToSend > UDP_BUF_SIZE ? UDP_BUF_SIZE : remainingToSend;
-		while (sendto(clientSocket, (const char*)from, sendSize, 0, (const struct sockaddr*)&tempServer, sizeof(tempServer)) < 0)
+		while (sendto(_clientSocket, (const char*)from, sendSize, 0, (const struct sockaddr*)&tempServer, sizeof(tempServer)) < 0)
 		{
 			printf("Error during send, retrying...\n");
 		}
@@ -121,7 +132,7 @@ void UDPClient::SendImage(cv::Mat& img, std::string extension)
 		//std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	
-	bool verified = VerifyImage(img, clientSocket, tempServer);
+	bool verified = VerifyImage(img, _clientSocket, tempServer);
 	std::cout << "value of verified - " << verified << std::endl;
 }
 
@@ -141,7 +152,7 @@ void UDPClient::SendFilter(GibCore::ImageFilterParams params)
 	memset(newMsg, 0, sizeof(GibCore::ImageFilterParams));
 	memcpy(newMsg, &params, sizeof(GibCore::ImageFilterParams));
 	//paramsS.params = std::string("Hello").c_str();
-	sendto(clientSocket, (const char*)&params, sizeof(GibCore::ImageFilterParams), 0, (sockaddr*)&server, sizeof(sockaddr_in));
+	sendto(_clientSocket, (const char*)&params, sizeof(GibCore::ImageFilterParams), 0, (sockaddr*)&_server, sizeof(sockaddr_in));
 }
 
 
@@ -204,12 +215,13 @@ cv::Mat UDPClient::ReceieveImage(SOCKET& clientSocket)
 
 void UDPClient::SaveImage(cv::Mat& img, std::string nameAndPath)
 {
+	std::cout << nameAndPath << " - path" << std::endl;
 	cv::imwrite(nameAndPath, img);
 }
 
 void UDPClient::CloseAndCleanup()
 {
-	closesocket(clientSocket);
+	closesocket(_clientSocket);
 	WSACleanup();
 }
 
