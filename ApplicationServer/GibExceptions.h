@@ -9,17 +9,32 @@ protected:
 	std::string _errorString;
 
 public:
-	virtual std::string OutputError() = 0;
+	virtual std::string OutputError() const = 0;
 
 	friend std::ostream& operator<<(std::ostream& os, const GibException* e);
 };
 
 class InvalidConvertException : public GibException
 {
-	InvalidConvertException(const char* error)
+private:
+	std::string _neededType;
+public:
+	InvalidConvertException(const char* error, std::string neededType)
+	{
+		_errorString = error;
+		_neededType = neededType;
+	}
+
+	std::string OutputError() const override;
+};
+
+class InvalidArgumentException : public GibException
+{
+public:
+	InvalidArgumentException(const char* error)
 	{
 		_errorString = error;
 	}
 
-	std::string OutputError() override;
+	std::string OutputError() const override;
 };

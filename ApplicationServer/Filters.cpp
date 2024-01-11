@@ -1,13 +1,19 @@
 #include "Filters.h"
-
-cv::Mat Rotate::RunFilter(cv::Mat& img, std::vector<std::string>& params)
+/// <summary>
+/// Rotate Filter
+/// </summary>
+/// <param name="img">Image</param>
+/// <param name="params">Parameters</param>
+/// <returns>Rotated Image</returns>
+cv::Mat Rotate::RunFilter(cv::Mat& img, std::vector<std::string>& params) throw(GibException*)
 {
     cv::Mat newImg;
-    if (params[0] == "90")
+    // Uses OpenCV rotate function based on the parameters supplied
+    if (params[0] == "90" || params[0] == "-270")
     {
         cv::rotate(img, newImg, cv::ROTATE_90_CLOCKWISE);
     }
-    else if (params[0] == "180")
+    else if (params[0] == "180" || params[0] == "-180")
     {
         cv::rotate(img, newImg, cv::ROTATE_180);
     }
@@ -15,21 +21,20 @@ cv::Mat Rotate::RunFilter(cv::Mat& img, std::vector<std::string>& params)
     {
         cv::rotate(img, newImg, cv::ROTATE_90_COUNTERCLOCKWISE);
     }
-    else
-        cv::rotate(img, newImg, cv::ROTATE_90_COUNTERCLOCKWISE);
+    else 
+        throw(new InvalidArgumentException(params[0].c_str()));
     return newImg;
 }
-Rotate::Rotate()
-{
 
-}
 
-Greyscale::Greyscale()
-{
 
-}
-
-cv::Mat Greyscale::RunFilter(cv::Mat& img, std::vector<std::string>& params)
+/// <summary>
+/// Grayscale Filter
+/// </summary>
+/// <param name="img">Image</param>
+/// <param name="params">Parameters</param>
+/// <returns>GrayscaleImage</returns>
+cv::Mat Greyscale::RunFilter(cv::Mat& img, std::vector<std::string>& params) throw(GibException*)
 {
     //return GrayscaleSingleThreaded(img);
     if (params.size() == 0)
@@ -73,6 +78,7 @@ cv::Mat Greyscale::GrayscaleSingleThreaded(cv::Mat& img)
 
             //BGR
             //0.299 * red | 0.587 * green | 0.114 * blue
+            // Add values into the pixel val and then update the image
             int pixelVal = 0;
             pixelVal += (int)pixel[0] * 0.114;
             pixelVal += (int)pixel[1] * 0.587;
@@ -148,60 +154,101 @@ void Greyscale::GrayscaleThread(cv::Mat& origImg, cv::Mat tempImg, int startPos,
     mutex.unlock();
 }
 
-Flip::Flip()
+/// <summary>
+/// Flips an image
+/// </summary>
+/// <param name="img">image</param>
+/// <param name="params">parameters</param>
+/// <returns>Flipped Image</returns>
+cv::Mat Flip::RunFilter(cv::Mat& img, std::vector<std::string>& params) throw(GibException*)
 {
-}
-
-cv::Mat Flip::RunFilter(cv::Mat& img, std::vector<std::string>& params)
-{
+    // Gets appropriate flip code from the params
     int flipCode = 0;
     if (params[0] == "horizontal") flipCode = 0;
     else if (params[0] == "vertical") flipCode = 1;
     else if (params[0] == "both") flipCode = -1;
+    else throw(new InvalidArgumentException(params[0].c_str()));
     cv::Mat flippedImg;
+    // Flips images based on flipped code
     cv::flip(img, flippedImg, flipCode);
     return flippedImg;
 }
 
-cv::Mat Resize::RunFilter(cv::Mat& img, std::vector<std::string>& params)
+/// <summary>
+/// Resizes image
+/// </summary>
+/// <param name="img">Image</param>
+/// <param name="params">Parameters</param>
+/// <returns>Resized Image</returns>
+cv::Mat Resize::RunFilter(cv::Mat& img, std::vector<std::string>& params) throw(GibException*)
 {
+    // Gets new image size from params
     cv::Mat resizedImg;
-    int x = stoi(params[0]);
-    int y = stoi(params[1]);
+    int x, y;
+    try {
+    x = stoi(params[0]);
+    y = stoi(params[1]);
+    }
+    catch (std::exception e)
+    {
+        throw (new InvalidConvertException("Size", "integer"));
+    }
     cv::Size size(x,y);
+    // Resizes image using OpenCV functions
     cv::resize(img, resizedImg, size);
     return resizedImg;
 }
 
-cv::Mat Crop::RunFilter(cv::Mat& img, std::vector<std::string>& params)
+/// <summary>
+/// Crops image
+/// </summary>
+/// <param name="img">Image</param>
+/// <param name="params">Parameters</param>
+/// <returns>Cropped image</returns>
+cv::Mat Crop::RunFilter(cv::Mat& img, std::vector<std::string>& params) throw(GibException*)
 {
     cv::Mat croppedImg;
     int startX;
     int startY;
     int endX;
     int endY;
-    if (params.size() < 4)
-    {
-        startX = 0;
-        startY = 0;
-        endX = stoi(params[0]);
-        endY = stoi(params[1]);
+    // Uses number of params to decide where the image is cropped and if it is cropped from 0,0
+    try {
+
+        if (params.size() < 4)
+        {
+            startX = 0;
+            startY = 0;
+            endX = stoi(params[0]);
+            endY = stoi(params[1]);
+        }
+        else
+        {
+            startX = stoi(params[0]);
+            startY = stoi(params[1]);
+            endX = stoi(params[2]);
+            endY = stoi(params[3]);
+        }
     }
-    else
+    catch (std::exception e)
     {
-        startX = stoi(params[0]);
-        startY = stoi(params[1]);
-        endX = stoi(params[2]);
-        endY = stoi(params[3]);
+        throw (new InvalidConvertException("Size", "integer"));
     }
 
+    // Uses rect to crop image
     cv::Rect rect(startX, startY, endX, endY);
     croppedImg = img(rect);
     return croppedImg;
 }
-
-cv::Mat BoxBlur::RunFilter(cv::Mat& img, std::vector<std::string>& params)
+/// <summary>
+/// Box Blurs an Image
+/// </summary>
+/// <param name="img">Image</param>
+/// <param name="params">Parameters</param>
+/// <returns>Blurred Image</returns>
+cv::Mat BoxBlur::RunFilter(cv::Mat& img, std::vector<std::string>& params) throw(GibException*)
 {
+    // If no parameters are defined use set size
     int sizeX;
     int sizeY;
     if (params.size() == 0)
@@ -211,9 +258,15 @@ cv::Mat BoxBlur::RunFilter(cv::Mat& img, std::vector<std::string>& params)
     }
     else
     {
-        sizeX = stoi(params[0]);
-        sizeY = stoi(params[1]);
+        try {
+            sizeX = stoi(params[0]);
+            sizeY = stoi(params[1]);
+        }
+        catch(std::exception e) {
+            throw (new InvalidConvertException("Box blur size", "integer"));
+        }
     }
+    // If parallel is set, use multithreaded option
     if (params.size() == 3)
     {
         if (params[2] == "parallel")
@@ -242,6 +295,7 @@ cv::Mat BoxBlur::BoxBlurSingleThreaded(cv::Mat& img, int sizeX, int sizeY)
             {
                 for (int y = -((sizeX - 1) / 2); y < (((sizeX - 1) / 2) + 1); y++)
                 {
+                    // Loop through all of the surrounding pixels of an image (based on the size specific in the size)
                     int tempX = i + x;
                     int tempY = j + y;
                     if (tempX < 0 || tempX >= boxBlurImg.rows || tempY < 0 || tempY >= boxBlurImg.cols) continue;
@@ -255,6 +309,7 @@ cv::Mat BoxBlur::BoxBlurSingleThreaded(cv::Mat& img, int sizeX, int sizeY)
                 }
             }
             //sum / count;
+            // Calculates the average count of the image values based on the number of pixels looped through and updates image
             cv::Vec3b temp;
             red = red / count;
             green = green / count;
@@ -263,6 +318,7 @@ cv::Mat BoxBlur::BoxBlurSingleThreaded(cv::Mat& img, int sizeX, int sizeY)
             temp[1] = (uchar)green;
             temp[2] = (uchar)red;
             boxBlurImg.at<cv::Vec3b>(i, j) = temp;
+            
         }
     }
     auto end = std::chrono::high_resolution_clock::now();
@@ -346,8 +402,15 @@ void BoxBlur::BoxBlurThread(cv::Mat& origImg, cv::Mat tempImg, int startPos, int
     mutex.unlock();
 }
 
-cv::Mat Sharpening::RunFilter(cv::Mat& img, std::vector<std::string>& params)
+/// <summary>
+/// Sharpens an image
+/// </summary>
+/// <param name="img">Image</param>
+/// <param name="params">Parameters</param>
+/// <returns>Sharpened Image</returns>
+cv::Mat Sharpening::RunFilter(cv::Mat& img, std::vector<std::string>& params) throw(GibException*)
 {
+    // Defines a sharpening kernel and runs filter2D using sharpened kernel
     cv::Mat sharpenedImg;
     //cv::InputArray kernel([[-1, -1, -1], [-1, 9, -1], [-1, -1, -1]] );
     cv::Mat sharpeningKernel = (cv::Mat_<double>(3, 3) << -1, -1, -1,
@@ -358,23 +421,39 @@ cv::Mat Sharpening::RunFilter(cv::Mat& img, std::vector<std::string>& params)
     return sharpenedImg;
 }
 
-cv::Mat BrightnessAdjust::RunFilter(cv::Mat& img, std::vector<std::string>& params)
+/// <summary>
+/// Adjusts the image brightness
+/// </summary>
+/// <param name="img">Image</param>
+/// <param name="params">Parameters</param>
+/// <returns>Adjusted image</returns>
+cv::Mat BrightnessAdjust::RunFilter(cv::Mat& img, std::vector<std::string>& params) throw(GibException*)
 {
-    int brightness = stoi(params[0]);
+    int brightness;
+    try {
+        brightness = stoi(params[0]);
+    }
+    catch (std::exception& err)
+    {
+        throw(new InvalidConvertException("Brightness", "integer"));
+    }
     return BrightnessAdjustMultithreaded(img, brightness);
 }
 
-cv::Mat BrightnessAdjust::BrightnessAdjustMultithreaded(cv::Mat& img, int brightness)
+cv::Mat BrightnessAdjust::BrightnessAdjustMultithreaded(cv::Mat& img, int brightness) 
 {
     auto start = std::chrono::high_resolution_clock::now();
     cv::Mat newImg = GibCore::MultithreadedImageProcessing(mutex, img, NUM_THREADS, [brightness](cv::Mat& img, int x, int y) {
+            // Loops through the image adding the brightness values to each channel
             cv::Vec3b pixel = img.at<cv::Vec3b>(x, y);
             int blue = pixel[0] + brightness;
             int green = pixel[1] + brightness;
             int red = pixel[2] + brightness;
+            // Clamps the values between 0 and 255
             pixel[0] = GibCore::Clamp2(blue, 0, 255);
             pixel[1] = GibCore::Clamp2(green, 0, 255);
             pixel[2] = GibCore::Clamp2(red, 0, 255);
+            // Updates image
             img.at<cv::Vec3b>(x, y) = pixel;
         });
 
@@ -385,13 +464,21 @@ cv::Mat BrightnessAdjust::BrightnessAdjustMultithreaded(cv::Mat& img, int bright
     return newImg;
 }
 
-cv::Mat GammaCorrection::RunFilter(cv::Mat& img, std::vector<std::string>& params)
+cv::Mat GammaCorrection::RunFilter(cv::Mat& img, std::vector<std::string>& params) throw(GibException*)
 {
-    double gamma = std::stod(params[0]);
+    double gamma;
+    try {
+        gamma = std::stod(params[0]);
+    }
+    catch (std::exception& err)
+    {
+        throw(new InvalidConvertException("Gamma", "double"));
+    }
     std::cout << "This is the gamme value - " << gamma << std::endl;
     cv::Mat newImg = GibCore::MultithreadedImageProcessing(mutex, img, NUM_THREADS, [gamma](cv::Mat& img, int x, int y) {
         double gammaCorrection = 1 / gamma;
         cv::Vec3b pixel = img.at<cv::Vec3b>(x, y);
+        // Gets value of pixel and runs gamma correction formula
         double blue = (double)pixel[0] / 255;
         double green = (double)pixel[1] / 255;
         double red = (double)pixel[2] / 255;
@@ -404,12 +491,13 @@ cv::Mat GammaCorrection::RunFilter(cv::Mat& img, std::vector<std::string>& param
     return newImg;
 }
 
-cv::Mat ContrastAdjust::RunFilter(cv::Mat& img, std::vector<std::string>& params)
+cv::Mat ContrastAdjust::RunFilter(cv::Mat& img, std::vector<std::string>& params) throw(GibException*)
 {
     int contrast = stoi(params[0]);
     int factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
     cv::Mat newImg = GibCore::MultithreadedImageProcessing(mutex, img, NUM_THREADS, [factor](cv::Mat& img, int x, int y) 
         {
+            // Gets value of pixel and runs contrast adjusting formula
             cv::Vec3b pixel = img.at<cv::Vec3b>(x, y);
             int blue = pixel[0];
             int green = pixel[1];
@@ -417,6 +505,7 @@ cv::Mat ContrastAdjust::RunFilter(cv::Mat& img, std::vector<std::string>& params
             blue = factor * (blue - 128) + 128;
             green = factor * (green - 128) + 128;
             red = factor * (red - 128) + 128;
+            // Clamps image
             pixel[0] = GibCore::Clamp2(blue, 0, 255);
             pixel[1] = GibCore::Clamp2(green, 0, 255);
             pixel[2] = GibCore::Clamp2(red, 0, 255);

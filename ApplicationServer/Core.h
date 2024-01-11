@@ -12,6 +12,7 @@
 
 #define UDP_BUF_SIZE 1357
 #define HASH_ACCEPTABLE_ERROR 2.0
+#define UDP_TIMEOUT_MS = 10000
 
 #include "opencv2/core.hpp"
 #include "opencv2/imgcodecs.hpp"
@@ -28,7 +29,11 @@
 namespace GibCore
 {
 	
-
+	/// <summary>
+	/// Calculates the average hash of a given image
+	/// </summary>
+	/// <param name="img">Image</param>
+	/// <returns>Hash of the image</returns>
 	inline double CalculateHash(cv::Mat& img)
 	{
 		cv::Mat hashedImg;
@@ -47,6 +52,7 @@ namespace GibCore
 		return avg;
 	}
 
+	// Enum of ImageFilter
 	enum class ImageFilter
 	{
 		RESIZE,
@@ -65,20 +71,14 @@ namespace GibCore
 		NOTHING
 	};
 
-
+	// Struct containing the arguments and the enum stating what filter to use
 	struct ImageFilterParams
 	{
 		ImageFilter filter;
 		char params[1024];
-		char ext[4];
 	};
 
-	/*
-	std::pair<ImageFilter, int>(ImageFilter::RESIZE, 2),
-	std::pair<ImageFilter, int>(ImageFilter::ROTATION, 1)
-	};
-	std::map<ImageFilter, int> imageFilterParams = {
-	*/
+	// Map of the enum and the amount of required arguements
 	const std::map<ImageFilter, int> ImageFilterParamsSize = {
 		{ImageFilter::RESIZE, 2},
 		{ImageFilter::ROTATION, 1},
@@ -91,10 +91,15 @@ namespace GibCore
 		{ImageFilter::GAMMACORRECTION, 1},
 		{ImageFilter::CONTRASTADJUST, 1}
 	};
-	//extern std::map<ImageFilter, >
 
 	//Factory
 	
+	/// <summary>
+	/// Filter an image on a single thread using a lambda
+	/// </summary>
+	/// <param name="img">image</param>
+	/// <param name="f">function to perform</param>
+	/// <returns>Filtered image</returns>
 	inline cv::Mat FilterLambda(cv::Mat& img, const std::function <void(cv::Mat& img, int x, int y)>& f)
 	{
 		cv::Mat newImg = img.clone();
@@ -108,6 +113,15 @@ namespace GibCore
 		return newImg;
 	}
 
+	/// <summary>
+	/// Filter lambda for use on a thread
+	/// </summary>
+	/// <param name="mutex">mutex of class</param>
+	/// <param name="img">image</param>
+	/// <param name="startPos">Start position for the threaded chunk</param>
+	/// <param name="size">Size of threaded chunk</param>
+	/// <param name="f">Image function to perform</param>
+	/// <returns>Filtered Image</returns>
 	inline cv::Mat FilterLambdaParallel(std::mutex& mutex, cv::Mat& img, int startPos, int size, const std::function<void(cv::Mat& img, int x, int y)>& f)
 	{
 		cv::Mat newImg = img.clone();
@@ -131,7 +145,14 @@ namespace GibCore
 
 		return img;
 	}
-
+	/// <summary>
+	/// Creates a set of threads based on the thread count to run a lambda function on every pixel in a given range of rows
+	/// </summary>
+	/// <param name="mutex">mutex of the class so that we can lock the thread for the copying procedure</param>
+	/// <param name="img">Reference to the image</param>
+	/// <param name="threadCount">The number of threads to use</param>
+	/// <param name="f">The function to perform on every element</param>
+	/// <returns>Returns image</returns>
 	inline cv::Mat MultithreadedImageProcessing(std::mutex& mutex, cv::Mat& img, int threadCount, const std::function<void(cv::Mat& img, int x, int y)>& f)
 	{
 		cv::Mat newImg = img.clone();
@@ -149,6 +170,13 @@ namespace GibCore
 		return newImg;
 	}
 
+	/// <summary>
+	/// Clamps uchar between two values
+	/// </summary>
+	/// <param name="pixelCol">colour of the pixel</param>
+	/// <param name="minVal">the minimum value</param>
+	/// <param name="maxVal">the maximum value</param>
+	/// <returns>clamped value</returns>
 	inline uchar Clamp2(int pixelCol, int minVal, int maxVal)
 	{
 		if (pixelCol > maxVal)
@@ -164,7 +192,13 @@ namespace GibCore
 			return (uchar)pixelCol;
 		}
 	}
-	
+	/// <summary>
+	/// Checks to see if two doubles are within a certain range of eachother
+	/// </summary>
+	/// <param name="val1">First Value</param>
+	/// <param name="val2">Second Value</param>
+	/// <param name="error">Error Margin</param>
+	/// <returns>Whether the values are close within the error </returns>
 	inline bool DoubleCloseEnough(double val1, double val2, double error)
 	{
 		if (val1 < val2 + error && val1 > val2 - error) return true;
@@ -175,11 +209,14 @@ namespace GibCore
 
 
 
-
+/// <summary>
+/// Factory setup that creates a filter object of whatever type is supplied as T
+/// </summary>
 class Filter;
 template<typename T>
 T* CreateFilter()
 {
+	// Assert makes sure that the type defined is a child of Filter
 	static_assert(std::is_base_of<Filter, T>::value, "T must inherit from the Filter class");
 	return new T();
 }

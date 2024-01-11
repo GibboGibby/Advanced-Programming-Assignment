@@ -16,12 +16,16 @@ private:
 public:
 	bool Init(int port = 8888, std::string ip = "127.0.0.1");
 	bool CreateSocket();
-	bool LoadImageFromPath(std::string path, cv::Mat& img, std::string& extension);
+	bool LoadImageFromPath(const std::string& path, cv::Mat& img, std::string& extension);
+	
 	void SendImage(cv::Mat& img, std::string extension);
 	void SendImageMultiThreaded(cv::Mat& img, std::string extension, cv::Mat& img2, std::string extension2);
+
+	GibCore::ImageFilter FilterFromString(std::string);
 	void SendFilter(GibCore::ImageFilterParams params);
 	bool VerifyImage(cv::Mat& img, SOCKET& clientSocket, sockaddr_in& tempServer);
 	cv::Mat ReceieveImage(SOCKET& clientSocket);
+	bool CheckImageSuccessfullyFiltered(SOCKET& socket);
 
 	void SaveImage(cv::Mat& img, std::string name);
 
@@ -29,17 +33,9 @@ public:
 
 	void CloseAndCleanup();
 
-	GibCore::ImageFilter FilterFromString(std::string);
 
 private:
-	void ExitProgram(std::string extra = "")
-	{
-		if (extra == "")
-			std::cout << "A problem has occured program will now terminate" << std::endl;
-		else
-			std::cout << "Error: " << extra << " - Program will now Terminate" << std::endl;
-		WSACleanup();
-		closesocket(_clientSocket);
-		exit(EXIT_FAILURE);
-	}
+
+	void ExitProgram(std::string extra = "");
+
 };

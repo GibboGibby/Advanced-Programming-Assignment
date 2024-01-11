@@ -86,12 +86,8 @@ int main(int argc, char* argv[])
 		std::cout << "Failed to load image" << std::endl;
 		return 1; 
 	}
-	for (int i = 0; i < 4; i++)
-	{
-		param.ext[i] = extension[i];
-	}
 
-	std::cout << param.ext << " - ext" << std::endl;
+
 
 	// Send image object using udp
 	std::cout << "Sending image!" << std::endl;
@@ -111,7 +107,7 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 	*/
-	img2 = cv::imread(".\\smol.png");
+	//img2 = cv::imread(".\\smol.png");
 	extension2 = ".png";
 
 	//client.SendImageMultiThreaded(img, extension, img2, extension2);
@@ -147,6 +143,9 @@ int main(int argc, char* argv[])
 
 	// Send the filter to the server
 	client.SendFilter(param);
+
+	bool success = client.CheckImageSuccessfullyFiltered(client.GetSocket());
+	if (!success) return -1;
 
 	cv::Mat recvimg = client.ReceieveImage(client.GetSocket());
 	std::string path;
