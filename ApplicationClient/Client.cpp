@@ -90,11 +90,19 @@ int main(int argc, char* argv[])
 	}
 
 	// Initialize Winsock
-	if (!client.Init(std::stoi(right), left))
+	try
 	{
-		WSACleanup();
-		return 1;
+		if (!client.Init(std::stoi(right), left))
+		{
+			WSACleanup();
+			return 1;
+		}
 	}
+	catch (std::exception e)
+	{
+		std::cout << "Invalid port value has been set, please try again" << std::endl;
+	}
+	
 	// Create socket
 	if (!client.CreateSocket())
 	{
