@@ -39,12 +39,12 @@ int main(int argc, char* argv[])
 	if (args.size() == 0)
 	{
 		PrintHelp();
-		return 1;
+		return -1;
 	}
 	if (args[0] == "help" || argc < 3)
 	{
 		PrintHelp();
-		return 1;
+		return -1;
 	}
 
 
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 	if (param.filter == GibCore::ImageFilter::NOTHING)
 	{
 		std::cout << "Not a valid filtering option" << std::endl;
-		return 1;
+		return -1;
 	}
 
 	// Checks to see if the correct number of arguments have been passed for the specific image filter (Too many is fine, too few bad)
@@ -74,7 +74,19 @@ int main(int argc, char* argv[])
 	{
 		std::cout << "incorrect parameters typed! - " << args[2] << " requres " << val << " parameters" << std::endl;
 		PrintHelp();
-		return 1;
+		return -1;
+	}
+
+	int charAmount = 0;
+	for (int i = 3; i < args.size(); i++)
+	{
+		charAmount += args[i].length();
+	}
+	if (charAmount > 1024)
+	{
+		std::cout << "Too many parameter characters have been typed - the limit is 1024 characters";
+		PrintHelp();
+		return -1;
 	}
 
 	// Initialize Winsock

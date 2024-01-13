@@ -438,9 +438,10 @@ cv::Mat GammaCorrection::RunFilter(cv::Mat& img, std::vector<std::string>& param
 
 cv::Mat ContrastAdjust::RunFilter(cv::Mat& img, std::vector<std::string>& params) throw(GibException*)
 {
+    int contrast;
     try 
     {
-        int contrast = stoi(params[0]);
+        contrast = stoi(params[0]);
         if (contrast < -255 || contrast > 255)
         {
             std::stringstream ss;
