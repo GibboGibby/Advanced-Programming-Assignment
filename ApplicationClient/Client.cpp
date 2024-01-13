@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
 	}
 	if (charAmount > 1024)
 	{
-		std::cout << "Too many parameter characters have been typed - the limit is 1024 characters";
+		std::cout << "Too many parameter characters have been typed - the limit is 1024 characters" << std::endl;
 		PrintHelp();
 		return -1;
 	}
