@@ -11,7 +11,7 @@
 #define PORT 8888
 
 #define UDP_BUF_SIZE 1357
-#define HASH_ACCEPTABLE_ERROR 2.0
+#define HASH_ACCEPTABLE_ERROR 4.0
 #define UDP_TIMEOUT_MS = 10000
 
 #include "opencv2/core.hpp"
@@ -124,25 +124,17 @@ namespace GibCore
 	/// <returns>Filtered Image</returns>
 	inline cv::Mat FilterLambdaParallel(std::mutex& mutex, cv::Mat& img, int startPos, int size, const std::function<void(cv::Mat& img, int x, int y)>& f)
 	{
-		cv::Mat newImg = img.clone();
+		//cv::Mat newImg = img.clone();
 		for (int i = startPos; i < startPos + size; i++)
 		{
-			if (i > newImg.cols) continue;
-			for (int j = 0; j < newImg.cols; j++)
+			// Loops through every image in the specified columns of rows
+			if (i > img.cols) continue;
+			for (int j = 0; j < img.cols; j++)
 			{
-				f(newImg, i, j);
+				//Run lambda function parameter on pixel
+				f(img, i, j);
 			}
 		}
-		mutex.lock();
-		for (int i = startPos; i < startPos + size; i++)
-		{
-			for (int j = 0; j < newImg.cols; j++)
-			{
-				img.at<cv::Vec3b>(i, j) = newImg.at<cv::Vec3b>(i, j);
-			}
-		}
-		mutex.unlock();
-
 		return img;
 	}
 	/// <summary>

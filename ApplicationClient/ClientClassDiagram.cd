@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="FullSignature">
+  <Class Name="UDPClient">
+    <Position X="6.25" Y="2.75" Width="5.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAACAEEAAUgAIwAACBAAAAAAAAAgCAAACAAAEADQ=</HashCode>
+      <FileName>UDPClient.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="GibCore::ImageFilterParams">
+    <Position X="13" Y="2.75" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAACAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Users\james\Documents\University\Advanced Programming\Advanced-Programming-Assignment\ApplicationServer\Core.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Enum Name="GibCore::ImageFilter">
+    <Position X="13" Y="5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AQMAAABACAAAogFAAAGAAAAAAAAAACgAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Users\james\Documents\University\Advanced Programming\Advanced-Programming-Assignment\ApplicationServer\Core.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

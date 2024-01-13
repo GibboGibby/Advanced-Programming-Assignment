@@ -269,7 +269,7 @@ cv::Mat UDPClient::ReceieveImage(SOCKET& clientSocket)
 		}
 		remainingToReceieve -= sendSize;
 		bufferPos += sendSize;
-		std::cout << "This is the amount received - " << remainingToReceieve << std::endl;
+		std::cout << "This is the amount to be received - " << remainingToReceieve << std::endl;
 
 	}
 	cv::Mat image;

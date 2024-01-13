@@ -36,40 +36,20 @@ cv::Mat Rotate::RunFilter(cv::Mat& img, std::vector<std::string>& params) throw(
 /// <returns>GrayscaleImage</returns>
 cv::Mat Greyscale::RunFilter(cv::Mat& img, std::vector<std::string>& params) throw(GibException*)
 {
-    //return GrayscaleSingleThreaded(img);
+    // Perform Grayscale filter single or multi-threaded
     if (params.size() == 0)
     {
         return GrayscaleMultiThreaded(img);
     }
-    if (params[0] == "parallel") return GrayscaleMultiThreaded(img);
-    else if (params[0] == "single") return GrayscaleSingleThreaded(img);
-    else if (params[0] == "testing")
-    {
-        return GibCore::FilterLambda(img, [](cv::Mat& img, int x, int y) {
-            cv::Vec3b pixel = img.at<cv::Vec3b>(x, y);
-            int pixelVal = 0;
-            pixelVal += (int)pixel[0] * 0.114;
-            pixelVal += (int)pixel[1] * 0.587;
-            pixelVal += (int)pixel[2] * 0.299;
-            pixelVal /= 3;
-            pixel[0] = (uchar)pixelVal;
-            pixel[1] = (uchar)pixelVal;
-            pixel[2] = (uchar)pixelVal;
-            img.at<cv::Vec3b>(x, y) = pixel;
-            });
-    }
-    
-    
-    
+    if (params[0] == "single") return GrayscaleSingleThreaded(img);
+    else return GrayscaleMultiThreaded(img);
 
-    
-    
 }
 
 cv::Mat Greyscale::GrayscaleSingleThreaded(cv::Mat& img)
 {
     auto startSingle = std::chrono::high_resolution_clock::now();
-    cv::Mat newImg = img;
+    cv::Mat newImg = img.clone();
     for (int i = 0; i < newImg.rows; i++)
     {
         for (int j = 0; j < newImg.cols; j++)
@@ -83,7 +63,6 @@ cv::Mat Greyscale::GrayscaleSingleThreaded(cv::Mat& img)
             pixelVal += (int)pixel[0] * 0.114;
             pixelVal += (int)pixel[1] * 0.587;
             pixelVal += (int)pixel[2] * 0.299;
-            pixelVal /= 3;
             pixel[0] = (uchar)pixelVal;
             pixel[1] = (uchar)pixelVal;
             pixel[2] = (uchar)pixelVal;
@@ -102,13 +81,14 @@ cv::Mat Greyscale::GrayscaleSingleThreaded(cv::Mat& img)
 cv::Mat Greyscale::GrayscaleMultiThreaded(cv::Mat& img)
 {
     auto startMulti = std::chrono::high_resolution_clock::now();
-    cv::Mat newImg = GibCore::MultithreadedImageProcessing(mutex, img, NUM_THREADS, [](cv::Mat& img, int x, int y) {
+    // Use multi threaded processing function
+    // Passing in a grayscale function on each pixel
+    cv::Mat newImg = GibCore::MultithreadedImageProcessing(_mutex, img, NUM_THREADS, [](cv::Mat& img, int x, int y) {
             cv::Vec3b pixel = img.at<cv::Vec3b>(x, y);
             int pixelVal = 0;
             pixelVal += (int)pixel[0] * 0.114;
             pixelVal += (int)pixel[1] * 0.587;
             pixelVal += (int)pixel[2] * 0.299;
-            pixelVal /= 3;
             pixel[0] = (uchar)pixelVal;
             pixel[1] = (uchar)pixelVal;
             pixel[2] = (uchar)pixelVal;
@@ -122,37 +102,6 @@ cv::Mat Greyscale::GrayscaleMultiThreaded(cv::Mat& img)
     return newImg;
 }
 
-void Greyscale::GrayscaleThread(cv::Mat& origImg, cv::Mat tempImg, int startPos, int size)
-{
-    for (int i = startPos; i < startPos + size; i++)
-    {
-        if (i > tempImg.cols) continue;
-        for (int j = 0; j < tempImg.cols; j++)
-        {
-            cv::Vec3b pixel = tempImg.at<cv::Vec3b>(i, j);
-            int pixelVal = 0;
-            pixelVal += (int)pixel[0] * 0.114;
-            pixelVal += (int)pixel[1] * 0.587;
-            pixelVal += (int)pixel[2] * 0.299;
-            pixelVal /= 3;
-            pixel[0] = (uchar)pixelVal;
-            pixel[1] = (uchar)pixelVal;
-            pixel[2] = (uchar)pixelVal;
-            tempImg.at<cv::Vec3b>(i, j) = pixel;
-        }
-    }
-
-    
-    mutex.lock();
-    for (int i = startPos; i < startPos + size; i++)
-    {
-        for (int j = 0; j < tempImg.cols; j++)
-        {
-            origImg.at<cv::Vec3b>(i, j) = tempImg.at<cv::Vec3b>(i, j);
-        }
-    }
-    mutex.unlock();
-}
 
 /// <summary>
 /// Flips an image
@@ -331,7 +280,7 @@ cv::Mat BoxBlur::BoxBlurSingleThreaded(cv::Mat& img, int sizeX, int sizeY)
 
 cv::Mat BoxBlur::BoxBlurMutliThreaded(cv::Mat& img, int sizeX, int sizeY)
 {
-    cv::Mat newImg = img;
+    cv::Mat newImg = img.clone();
     int size = std::round((double)img.rows / NUM_THREADS);
     auto start = std::chrono::high_resolution_clock::now();
     std::vector<std::thread> threads;
@@ -354,7 +303,7 @@ cv::Mat BoxBlur::BoxBlurMutliThreaded(cv::Mat& img, int sizeX, int sizeY)
 
 void BoxBlur::BoxBlurThread(cv::Mat& origImg, cv::Mat tempImg, int startPos, int size, int sizeX, int sizeY)
 {
-    cv::Mat boxBlurImg = tempImg;
+    cv::Mat boxBlurImg = origImg;
     for (int i = startPos; i < startPos + size; i++)
     {
         if (i > tempImg.cols) continue;
@@ -391,15 +340,6 @@ void BoxBlur::BoxBlurThread(cv::Mat& origImg, cv::Mat tempImg, int startPos, int
             boxBlurImg.at<cv::Vec3b>(i, j) = temp;
         }
     }
-    mutex.lock();
-    for (int i = startPos; i < startPos + size; i++)
-    {
-        for (int j = 0; j < tempImg.cols; j++)
-        {
-            origImg.at<cv::Vec3b>(i, j) = tempImg.at<cv::Vec3b>(i, j);
-        }
-    }
-    mutex.unlock();
 }
 
 /// <summary>
@@ -432,6 +372,11 @@ cv::Mat BrightnessAdjust::RunFilter(cv::Mat& img, std::vector<std::string>& para
     int brightness;
     try {
         brightness = stoi(params[0]);
+        if (brightness < -255 || brightness > 255) {
+            std::stringstream ss;
+            ss << brightness;
+            throw(new InvalidRangeException(ss.str().c_str(), "-255", "255"));
+        }
     }
     catch (std::exception& err)
     {
@@ -443,7 +388,7 @@ cv::Mat BrightnessAdjust::RunFilter(cv::Mat& img, std::vector<std::string>& para
 cv::Mat BrightnessAdjust::BrightnessAdjustMultithreaded(cv::Mat& img, int brightness) 
 {
     auto start = std::chrono::high_resolution_clock::now();
-    cv::Mat newImg = GibCore::MultithreadedImageProcessing(mutex, img, NUM_THREADS, [brightness](cv::Mat& img, int x, int y) {
+    cv::Mat newImg = GibCore::MultithreadedImageProcessing(_mutex, img, NUM_THREADS, [brightness](cv::Mat& img, int x, int y) {
             // Loops through the image adding the brightness values to each channel
             cv::Vec3b pixel = img.at<cv::Vec3b>(x, y);
             int blue = pixel[0] + brightness;
@@ -475,7 +420,7 @@ cv::Mat GammaCorrection::RunFilter(cv::Mat& img, std::vector<std::string>& param
         throw(new InvalidConvertException("Gamma", "double"));
     }
     std::cout << "This is the gamme value - " << gamma << std::endl;
-    cv::Mat newImg = GibCore::MultithreadedImageProcessing(mutex, img, NUM_THREADS, [gamma](cv::Mat& img, int x, int y) {
+    cv::Mat newImg = GibCore::MultithreadedImageProcessing(_mutex, img, NUM_THREADS, [gamma](cv::Mat& img, int x, int y) {
         double gammaCorrection = 1 / gamma;
         cv::Vec3b pixel = img.at<cv::Vec3b>(x, y);
         // Gets value of pixel and runs gamma correction formula
@@ -493,9 +438,22 @@ cv::Mat GammaCorrection::RunFilter(cv::Mat& img, std::vector<std::string>& param
 
 cv::Mat ContrastAdjust::RunFilter(cv::Mat& img, std::vector<std::string>& params) throw(GibException*)
 {
-    int contrast = stoi(params[0]);
+    try 
+    {
+        int contrast = stoi(params[0]);
+        if (contrast < -255 || contrast > 255)
+        {
+            std::stringstream ss;
+            ss << contrast;
+            throw(new InvalidRangeException(ss.str().c_str(), "-255", "255"));
+        }
+    }
+    catch (std::exception& e)
+    {
+        throw(new InvalidConvertException("contrast", "integer"));
+    }
     int factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
-    cv::Mat newImg = GibCore::MultithreadedImageProcessing(mutex, img, NUM_THREADS, [factor](cv::Mat& img, int x, int y) 
+    cv::Mat newImg = GibCore::MultithreadedImageProcessing(_mutex, img, NUM_THREADS, [factor](cv::Mat& img, int x, int y) 
         {
             // Gets value of pixel and runs contrast adjusting formula
             cv::Vec3b pixel = img.at<cv::Vec3b>(x, y);

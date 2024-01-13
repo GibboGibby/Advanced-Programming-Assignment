@@ -38,3 +38,19 @@ public:
 
 	std::string OutputError() const override;
 };
+
+class InvalidRangeException : public GibException
+{
+private:
+	const char* _min;
+	const char* _max;
+public:
+	InvalidRangeException(const char* error, const char* min, const char* max)
+	{
+		_errorString = error;
+		_min = min;
+		_max = max;
+	}
+
+	std::string OutputError() const override;
+};

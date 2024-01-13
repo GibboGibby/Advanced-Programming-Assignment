@@ -26,10 +26,12 @@ public:
 	bool CreateSocket();
 	bool BindServer();
 	void ReceiveImageParallel();
-	void ReceivingAndProcessing(sockaddr_in client, size_t size, int port);
 	void CloseAndCleanup();
 
 private:
+
+	void ReceivingAndProcessing(sockaddr_in client, size_t size, int port);
+
 	Filter* GetFilterFromEnum(GibCore::ImageFilter filter);
 
 	cv::Mat ReceiveImage(SOCKET& threadSocket, size_t size);

@@ -10,7 +10,20 @@
 // Print out help information
 void PrintHelp()
 {
-	std::cout << "Help stuff" << std::endl;
+	std::cout << "usage: <ip>:<port> <filter> <filter parameters> ..." << std::endl;
+	std::cout << "Fitlers: " << std::endl;
+
+	std::cout << "			- resize <x> <y> [new size]" << std::endl;
+	std::cout << "			- rotation <degrees> [must be in 90 degree increments]" << std::endl;
+	std::cout << "			- grayscale" << std::endl;
+	std::cout << "			- flip <side> [horizontal, vertical or both]" << std::endl;
+	std::cout << "			- crop <x> <y> [crops from 0,0 to x,y]" << std::endl;
+	std::cout << "			- crop <x1> <y1> <x2> <y2> [crops from x1, y1 to x2, y2]" << std::endl;
+	std::cout << "			- boxblur <x size> <y size> <[optional] parallel> [size of the box blur block]" << std::endl;
+	std::cout << "			- sharpen" << std::endl;
+	std::cout << "			- brightness <brightness> [between -255 and 255]" << std::endl;
+	std::cout << "			- gamma <gamma> [gamma correction value]" << std::endl;
+	std::cout << "			- contrast <contrast> [between -255 and 255]" << std::endl;
 }
 
 

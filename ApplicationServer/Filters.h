@@ -10,12 +10,11 @@ public:
 class Greyscale : public Filter
 {
 private:
-	std::mutex mutex;
-public:
-	cv::Mat RunFilter(cv::Mat& img, std::vector<std::string>& params)throw(GibException*);
+	std::mutex _mutex;
 	cv::Mat GrayscaleSingleThreaded(cv::Mat& img);
 	cv::Mat GrayscaleMultiThreaded(cv::Mat& img);
-	void GrayscaleThread(cv::Mat& origImg, cv::Mat tempImg, int startPos, int size);
+public:
+	cv::Mat RunFilter(cv::Mat& img, std::vector<std::string>& params)throw(GibException*);
 };
 
 class Flip : public Filter
@@ -38,12 +37,12 @@ class Crop : public Filter
 class BoxBlur : public Filter
 {
 private:
-	std::mutex mutex;
-public:
-	cv::Mat RunFilter(cv::Mat& img, std::vector<std::string>& params)throw(GibException*);
+	std::mutex _mutex;
 	cv::Mat BoxBlurSingleThreaded(cv::Mat& img, int sizeX, int sizeY);
 	cv::Mat BoxBlurMutliThreaded(cv::Mat& img, int sizeX, int sizeY);
 	void BoxBlurThread(cv::Mat& origImg, cv::Mat tempImg, int startPos, int size, int sizeX, int sizeY);
+public:
+	cv::Mat RunFilter(cv::Mat& img, std::vector<std::string>& params)throw(GibException*);
 };
 
 class Sharpening : public Filter
@@ -54,16 +53,16 @@ class Sharpening : public Filter
 class BrightnessAdjust : public Filter
 {
 private:
-	std::mutex mutex;
+	std::mutex _mutex;
+	cv::Mat BrightnessAdjustMultithreaded(cv::Mat& img, int brightness);
 public:
 	cv::Mat RunFilter(cv::Mat& img, std::vector<std::string>& params)throw(GibException*);
-	cv::Mat BrightnessAdjustMultithreaded(cv::Mat& img, int brightness);
 };
 
 class GammaCorrection : public Filter
 {
 private:
-	std::mutex mutex;
+	std::mutex _mutex;
 public:
 	cv::Mat RunFilter(cv::Mat& img, std::vector<std::string>& params)throw(GibException*);
 };
@@ -71,7 +70,7 @@ public:
 class ContrastAdjust : public Filter
 {
 private:
-	std::mutex mutex;
+	std::mutex _mutex;
 public:
 	cv::Mat RunFilter(cv::Mat& img, std::vector<std::string>& params)throw(GibException*);
 };

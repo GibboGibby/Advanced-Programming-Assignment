@@ -1,0 +1,130 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="FullSignature">
+  <Class Name="UDPServer">
+    <Position X="19.5" Y="5" Width="5.75" />
+    <TypeIdentifier>
+      <HashCode>AAABAACAEEIAAECIQQATBIAAAVAAAIEiAgICQAAABQA=</HashCode>
+      <FileName>UDPServer.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Rotate">
+    <Position X="14.25" Y="10.25" Width="3.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Filters.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Greyscale">
+    <Position X="3.25" Y="6.5" Width="5.75" />
+    <TypeIdentifier>
+      <HashCode>AIEAAAAAAAAAAAAEAAACAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Filters.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Flip">
+    <Position X="14.25" Y="7" Width="3.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Filters.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Resize">
+    <Position X="14.25" Y="5.5" Width="3.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Filters.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Crop">
+    <Position X="14.25" Y="4" Width="3.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Filters.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BoxBlur">
+    <Position X="3.25" Y="4" Width="5.75" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAABAAAAACAAACAAEAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Filters.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Sharpening">
+    <Position X="14.25" Y="8.5" Width="3.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Filters.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BrightnessAdjust">
+    <Position X="9.5" Y="4" Width="4.25" />
+    <TypeIdentifier>
+      <HashCode>CIAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Filters.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GammaCorrection">
+    <Position X="9.5" Y="6.25" Width="4.25" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Filters.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ContrastAdjust">
+    <Position X="9.5" Y="8.5" Width="4.25" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Filters.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Filter" Collapsed="true">
+    <Position X="8.75" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Filter.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GibException">
+    <Position X="20.25" Y="0.75" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAg=</HashCode>
+      <FileName>GibExceptions.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="InvalidConvertException">
+    <Position X="23.25" Y="2.75" Width="4.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAIAAAAAAAAAAAAAgAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>GibExceptions.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="InvalidArgumentException">
+    <Position X="15.75" Y="1" Width="3.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAEAAAAAAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>GibExceptions.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="InvalidRangeException">
+    <Position X="18.25" Y="2.75" Width="4.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAgAAAAgAAEABAAAAAAAA=</HashCode>
+      <FileName>GibExceptions.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="GibCore::ImageFilterParams">
+    <Position X="1" Y="3.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAACAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Core.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Enum Name="GibCore::ImageFilter">
+    <Position X="1" Y="5.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AQMAAABACAAAogFAAAGAAAAAAAAAACgAAAAAAAAAAAA=</HashCode>
+      <FileName>Core.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

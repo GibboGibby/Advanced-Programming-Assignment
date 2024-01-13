@@ -17,3 +17,8 @@ std::string InvalidArgumentException::OutputError() const
 {
 	return std::string("Invalid arguments have been passed to the server - Invalid Argument: " + _errorString);
 }
+
+std::string InvalidRangeException::OutputError() const
+{
+	return std::string(_errorString + " must be in the range: " + _min + " to " + _max);
+}

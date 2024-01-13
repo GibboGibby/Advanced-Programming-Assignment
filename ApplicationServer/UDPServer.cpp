@@ -227,7 +227,7 @@ cv::Mat UDPServer::ReceiveImage(SOCKET& threadSocket, size_t size)
 		remainingToReceieve -= sendSize;
 		// Increases the position of the pointer
 		bufferPos += sendSize;
-		std::cout << "This is the amount received - " << remainingToReceieve << std::endl;
+		std::cout << "This is the amount to be received - " << remainingToReceieve << std::endl;
 
 	}
 	// Creates a vector of uchar to put the image into
@@ -339,10 +339,10 @@ bool UDPServer::VerifyImage(cv::Mat& img, SOCKET& threadSocket, sockaddr_in clie
 	memcpy(&otherHash, buf, sizeof(double));
 	// Checks if they are close enough, within an acceptable region
 	bool isHash = GibCore::DoubleCloseEnough(hash, otherHash, HASH_ACCEPTABLE_ERROR);
-	_mutex.lock();
+	//_mutex.lock();
 	// Sends bool back
 	sendto(threadSocket, (char*) & isHash, sizeof(char), 0, (sockaddr*)&client, _slen);
-	_mutex.unlock();
+	//_mutex.unlock();
 	return isHash;
 }
 
