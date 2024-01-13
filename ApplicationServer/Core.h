@@ -128,7 +128,7 @@ namespace GibCore
 		for (int i = startPos; i < startPos + size; i++)
 		{
 			// Loops through every image in the specified columns of rows
-			if (i > img.cols) continue;
+			if (i > img.rows) continue;
 			for (int j = 0; j < img.cols; j++)
 			{
 				//Run lambda function parameter on pixel
