@@ -13,7 +13,8 @@ bool UDPClient::Init(int port, std::string ip)
 	// Set server info that has been specified in the arguments supplied to the program
 	_server.sin_family = AF_INET;
 	_server.sin_port = htons(port);
-	_server.sin_addr.s_addr = inet_addr(ip.c_str());
+	//_server.sin_addr.s_addr = inet_addr(ip.c_str());
+	inet_pton(AF_INET, (ip.c_str()), &_server.sin_addr.s_addr);
 	// Returns true if initialising was successful
 	return true;
 }

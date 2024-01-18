@@ -1,11 +1,8 @@
 #include <iostream>
 #include "UDPServer.h"
 
-int main()
+int main(int argc, char** argv)
 {
-
-
-	std::cout << "Hello from server" << std::endl;
 	// Create server object
 	UDPServer server;
 	// Init server
@@ -29,6 +26,9 @@ int main()
 		server.CloseAndCleanup();
 		return 1;
 	}
+
+	std::cout << "Server created and bound to port and now waiting for packets" << std::endl;
+
 	
 	while (true)
 	{

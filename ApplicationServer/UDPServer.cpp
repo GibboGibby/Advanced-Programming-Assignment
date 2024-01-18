@@ -1,5 +1,7 @@
 #include "UDPServer.h"
 
+
+
 bool UDPServer::Init()
 {
 	// Init winsock
@@ -17,12 +19,6 @@ bool UDPServer::Init()
 
 	return true;
 }
-
-	// https://gist.github.com/sunmeat/02b60c8a3eaef3b8a0fb3c249d8686fd
-	// This is a great resource for learning.
-	// Need to make the client a class and tidy this one up so not everything is done in the Init method
-	// Struct sends good tho
-	// Now need to test it with an opencv image
 
 	// https://stackoverflow.com/questions/57794550/sending-large-files-over-udp
 	// This is a great resource for learning how to send larger files across UDP
@@ -192,9 +188,6 @@ void UDPServer::ReceivingAndProcessing(sockaddr_in client, size_t size, int port
 	// Close thread
 	TerminateThread(threadSocket, port);
 }
-//https://stackoverflow.com/questions/54155900/udp-server-and-connected-sockets
-// For connect which should filter the packets. need to test on dans pc
-
 /// <summary>
 /// Receives the image from the client
 /// </summary>

@@ -10,8 +10,6 @@
 class UDPServer
 {
 private:
-	int RECVTHREADS = SERVER_THREADS;
-	int PROCESSTHREADS = SERVER_THREADS;
 	SOCKET _serverSocket;
 	sockaddr_in _server, _client;
 	WSAData _wsaData;

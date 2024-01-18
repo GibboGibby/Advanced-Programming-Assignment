@@ -1,4 +1,4 @@
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
+//#define _WINSOCK_DEPRECATED_NO_WARNINGS
 
 #include "..\ApplicationServer\Core.h"
 #include <iostream>
@@ -125,37 +125,9 @@ int main(int argc, char* argv[])
 	// Send image object using udp
 	std::cout << "Sending image!" << std::endl;
 
-	//client.SendImage(img, extension);
-
-	cv::Mat img2;
-	std::string extension2;
-	//std::string newStr;
-	//newStr = args[1].substr(0, 2);
-	//newStr += "smol.png";
-	/*
-* 
-	if (client.LoadImageFromPath(newStr, img2, extension2))
-	{
-		std::cout << "failed to load second img\n";
-		return 0;
-	}
-	*/
-	//img2 = cv::imread(".\\smol.png");
-	extension2 = ".png";
-
 	//client.SendImageMultiThreaded(img, extension, img2, extension2);
 	client.SendImage(img, extension);
 	
-
-
-	//std::thread si1(&SendImageToServer, std::ref(client), img, extension);
-	/*
-	std::thread si1(&SendImageToServer, std::ref(client), std::ref(img), std::ref(extension));
-	std::this_thread::sleep_for(std::chrono::milliseconds(200));
-	std::thread si2(&SendImageToServer, std::ref(client), std::ref(img2), std::ref(extension2));
-	si1.join();
-	si2.join();
-	*/
 
 
 	

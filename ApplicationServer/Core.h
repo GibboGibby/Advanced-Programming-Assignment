@@ -11,7 +11,7 @@
 #define PORT 8888
 
 #define UDP_BUF_SIZE 1357
-#define HASH_ACCEPTABLE_ERROR 4.0
+#define HASH_ACCEPTABLE_ERROR 20.0
 #define UDP_TIMEOUT_MS = 10000
 
 #include "opencv2/core.hpp"
